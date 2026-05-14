@@ -1,0 +1,297 @@
+/* ====================================================================
+   VGGT-Ω overrides on top of the Nerfies / Bulma scaffold.
+   Keep this small — most styling comes from static/css/index.css.
+=================================================================== */
+
+/* Omega character in the title — match top-level page: Source Serif Pro
+   with an Oxford-blue → warm-magenta gradient via background-clip:text. */
+.publication-title .omega {
+  font-family: "Source Serif Pro", "Iowan Old Style", "Apple Garamond",
+               "Baskerville", "Times New Roman", serif;
+  font-weight: 700;
+  background: linear-gradient(135deg, #002147, #b8336a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Disable links rendered as buttons but with aria-disabled */
+.button[aria-disabled="true"] {
+  opacity: .55;
+  pointer-events: none;
+}
+
+/* Teaser video sizing — fit width, contain to source aspect */
+.hero.teaser video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ---- TL;DR ---- */
+.vggto-tldr { padding-top: 1rem; padding-bottom: 1rem; }
+.tldr-grid .tldr-num {
+  font-family: "Google Sans", "Inter", sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  color: #b8336a;
+  line-height: 1.0;
+  margin-bottom: 6px;
+}
+.tldr-grid .tldr-label {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.35;
+}
+.tldr-grid .dim { color: #888; font-size: 12px; }
+
+/* ---- Tables ---- */
+.vggto-bench { font-size: 13px; }
+.vggto-bench .lalign { text-align: left; }
+.vggto-bench th, .vggto-bench td { text-align: center; padding: 4px 8px !important; }
+.vggto-bench .ours td { background: #fbf3f8; }
+.vggto-bench .ours.best td { background: #f3d9e7; }
+
+/* ---- Figures (paper figures, language + motion + mem_speed) ---- */
+figure.image img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+figure.image figcaption {
+  font-size: 13px;
+  color: #555;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+/* ---- Gallery: vertical stack of rows (video | viewer) ---- */
+.vggto-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 18px 0 8px;
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.row-h {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  color: #555;
+  padding-left: 2px;
+}
+.row-idx {
+  color: #b8336a;
+  font-weight: 700;
+}
+.row-name { color: #555; }
+.row-tag {
+  position: absolute;
+  bottom: 8px; left: 10px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(20,20,22,.65);
+  padding: 2px 8px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.row-panels {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 8px;
+  background: #f5f5f5;
+  align-items: stretch;
+  border-radius: 15px;
+  padding: 8px;
+  box-shadow: 0 6px 12px rgba(0,0,0,.15);
+}
+.row-video {
+  position: relative;
+  background: #f5f5f5;
+  aspect-ratio: 2580 / 720;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.row-video video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f5f5f5;
+  display: block;
+}
+.row-viewer {
+  position: relative;
+  background: #f5f5f5;
+  overflow: hidden;
+  border-radius: 10px;
+  cursor: grab;
+}
+.row-viewer:active { cursor: grabbing; }
+.viewer-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.viewer-status {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  color: #777;
+  background: rgba(255,255,255,.85);
+  padding: 4px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.viewer-status.error { color: #b8336a; }
+
+/* viewer toolbar (open full ↗) — match gallery's old vb-btn style */
+.viewer-toolbar {
+  position: absolute;
+  top: 8px; right: 8px;
+  display: flex; gap: 6px;
+  z-index: 5;
+}
+.vb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  background: rgba(20,20,22,.78);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: .04em;
+  backdrop-filter: blur(6px);
+  transition: background .12s;
+  text-decoration: none;
+}
+.vb-btn:hover { background: rgba(40,40,44,.92); color: #fff; }
+.vb-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #5b8def;
+  box-shadow: 0 0 6px rgba(91,141,239,.6);
+}
+.vb-swap { color: rgba(255,255,255,.6); margin-left: 2px; font-size: 10.5px; }
+
+/* ---- Pager (gallery + interactive share) ---- */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 22px 0 8px;
+  flex-wrap: wrap;
+}
+.pager-pages { display: flex; gap: 4px; }
+.pager-btn, .pager-num {
+  font-family: inherit;
+  font-size: 14px;
+  color: #555;
+  background: #fff;
+  border: 1px solid #d8d6d1;
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 6px 12px;
+  transition: background .15s, color .15s, border-color .15s;
+  line-height: 1;
+}
+.pager-num { min-width: 32px; padding: 6px 10px; }
+.pager-btn:hover:not(:disabled), .pager-num:hover {
+  background: #f7f4ef;
+  color: #111;
+  border-color: #b8b6b0;
+}
+.pager-btn:disabled { opacity: .4; cursor: not-allowed; }
+.pager-num.active {
+  background: #b8336a; border-color: #b8336a; color: #fff; font-weight: 600;
+}
+.pager-num.active:hover {
+  background: #b8336a; border-color: #b8336a; color: #fff;
+}
+
+/* ---- Interactive section (2 entries per row, each = video | viewer) ---- */
+.iv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 18px 0 8px;
+}
+.iv-entry {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #e5e3df;
+  border-radius: 8px;
+  padding: 6px;
+}
+.iv-video, .iv-view {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.iv-video video {
+  width: 100%; height: 100%;
+  display: block;
+  object-fit: contain;
+  background: #fff;
+}
+.iv-view { cursor: grab; }
+.iv-view:active { cursor: grabbing; }
+.iv-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+}
+.iv-caption {
+  grid-column: 1 / -1;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  color: #888;
+  padding: 4px 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.iv-status {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  color: #777;
+  background: rgba(255,255,255,.85);
+  padding: 4px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.iv-status.error { color: #b8336a; }
+
+@media (max-width: 1024px) {
+  .iv-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .row-panels { grid-template-columns: 1fr; }
+  .iv-entry { grid-template-columns: 1fr; }
+}

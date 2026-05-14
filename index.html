@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VGGT-Ω: Scaling Feed-Forward 3D Reconstruction for Static and Dynamic Scenes</title>
+  <meta name="description" content="VGGT-Ω substantially improves the accuracy, efficiency, and scope of feed-forward 3D reconstruction for static and dynamic scenes.">
+
+  <meta property="og:title" content="VGGT-Ω — Scaling Feed-Forward 3D Reconstruction">
+  <meta property="og:description" content="A scaled-up feed-forward 3D reconstruction model for static and dynamic scenes. +77% Sintel camera AUC@3°, 50× faster than MegaSaM.">
+  <meta property="og:type" content="website">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="stylesheet" href="./vggto.css?v=clean1">
+  <link rel="icon" type="image/svg+xml" href="./assets/img/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+<!-- ============================================================
+     HERO
+============================================================ -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">
+            VGGT-<span class="omega">Ω</span>
+          </h1>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><a href="https://jytime.github.io/">Jianyuan Wang</a><sup>1,2</sup>,</span>
+            <span class="author-block"><a href="https://silent-chen.github.io/">Minghao Chen</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="https://scholar.google.com/citations?user=FUDsZkEAAAAJ&amp;hl=zh-CN">Shangzhan Zhang</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="https://nikitakaraevv.github.io/">Nikita Karaev</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="https://demuc.de/">Johannes Schönberger</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="https://scholar.google.com/citations?user=IJidh-UAAAAJ&amp;hl=fr">Patrick Labatut</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="https://scholar.google.com/citations?user=lJ_oh2EAAAAJ&amp;hl=en">Piotr Bojanowski</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="https://d-novotny.github.io/">David Novotny</a>,</span>
+            <span class="author-block"><a href="https://www.robots.ox.ac.uk/~vedaldi/">Andrea Vedaldi</a><sup>1,2</sup>,</span>
+            <span class="author-block"><a href="https://chrirupp.github.io/">Christian Rupprecht</a><sup>1</sup></span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>Visual Geometry Group, University of Oxford&nbsp;&nbsp;</span>
+            <span class="author-block"><sup>2</sup>Meta AI</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark" aria-disabled="true">
+                  <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                  <span>Paper (soon)</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark" aria-disabled="true">
+                  <span class="icon"><i class="ai ai-arxiv"></i></span>
+                  <span>arXiv (soon)</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark" aria-disabled="true">
+                  <span class="icon"><i class="fab fa-github"></i></span>
+                  <span>Code (soon)</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#BibTeX" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-quote-right"></i></span>
+                  <span>BibTeX</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     TEASER VIDEO
+============================================================ -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <video id="teaser" autoplay muted loop playsinline>
+        <source src="./assets/videos/full/loop_closure__temple_castle__31996068_fps4.mp4" type="video/mp4">
+      </video>
+      <h2 class="subtitle has-text-centered">
+        Input frames (left) and the corresponding feed-forward 4D reconstruction (right) produced by <b>VGGT-Ω</b>.
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABSTRACT
+============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Recent feed-forward 3D reconstruction models, such as VGGT, have proven
+            competitive with traditional optimization-based reconstructors while also
+            providing geometry-aware features useful for other tasks. Here, we show
+            that the quality of these models scales predictably with model and data
+            size. We introduce <b>VGGT-Ω</b>, which substantially improves
+            reconstruction accuracy, efficiency, and capabilities for both static and
+            dynamic scenes. To enable training at an unprecedented scale, we introduce
+            architectural changes that improve training efficiency, a high-quality
+            data annotation pipeline that supports dynamic scenes, and a
+            self-supervised learning protocol.
+          </p>
+          <p>
+            We simplify VGGT's architecture by using a single dense prediction head
+            with multi-task supervision and removing expensive high-resolution
+            convolutional layers. We also use registers to aggregate scene information
+            into a compact representation, and introduce <b>register attention</b>,
+            which restricts cross-frame information exchange to these registers, in
+            part replacing global attention. VGGT-Ω uses only ∼30% of the GPU memory
+            of its predecessor during training, which lets us train with
+            <b>15× more supervised data</b> and leverage vast amounts of unlabeled
+            video. VGGT-Ω achieves strong results across multiple static and dynamic
+            benchmarks — e.g., improving the previous best Sintel camera AUC@3° by
+            <b>77%</b>. We also show that the learned registers can improve
+            vision-language-action models and support alignment with language,
+            suggesting that reconstruction can be a powerful and scalable proxy task
+            for spatial understanding.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     OVERVIEW
+============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Overview</h2>
+    <div class="content has-text-justified">
+      <p>
+        VGGT-Ω is a single feed-forward Transformer that ingests one or more
+        images and jointly predicts camera parameters and per-pixel depth for
+        every frame. Compared to VGGT, the model is leaner, scales further, and
+        handles dynamic content out of the box.
+      </p>
+    </div>
+    <div class="columns is-multiline">
+      <div class="column is-half">
+        <h4 class="title is-5">Register attention</h4>
+        <p>A subset of global-attention layers exchanges information only
+        through a small set of scene tokens. The registers carry global scene
+        information and reduce global-attention cost by ~25% FLOPs with no
+        measurable accuracy drop.</p>
+      </div>
+      <div class="column is-half">
+        <h4 class="title is-5">One dense head</h4>
+        <p>The expensive DPT blocks running above 1/4 resolution are replaced
+        by an MLP + pixel-shuffle. Tracks and point maps are kept only as
+        training-time losses, freeing memory without losing supervision.</p>
+      </div>
+      <div class="column is-half">
+        <h4 class="title is-5">Dynamic-aware data pipeline</h4>
+        <p>A 5-stage pipeline (VLM filter → dynamic mask → multi-method
+        matching → COLMAP + filtering → multi-view consistency) turns 40M
+        internet videos into ~0.8M high-quality annotated sequences, ~1/3
+        dynamic.</p>
+      </div>
+      <div class="column is-half">
+        <h4 class="title is-5">Teacher–student self-supervision</h4>
+        <p>An EMA teacher supervises a student through different augmentations
+        and frame orderings, learning from 18M unlabeled videos to improve
+        out-of-distribution generalization.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     GALLERY
+============================================================ -->
+<section class="section">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Gallery</h2>
+    <div class="content has-text-justified">
+      <p>
+        15 reconstructions across static landmarks, dynamic action, aerial / FPV
+        flights, indoor captures, and underwater scenes. Each row shows the
+        input frames and an orbit render side-by-side on the left
+        (click to fullscreen); on the right, an interactive viewer of the
+        VGGT-Ω 4D reconstruction.
+      </p>
+    </div>
+
+    <div class="vggto-grid" id="galleryGrid">
+      <!-- rows injected by gallery.js -->
+    </div>
+
+    <nav class="pager" id="galleryPager" aria-label="Gallery pagination">
+      <button type="button" class="pager-btn" data-pager="prev" aria-label="Previous page">‹ Prev</button>
+      <div class="pager-pages" id="pagerPages" role="group" aria-label="Pages"></div>
+      <button type="button" class="pager-btn" data-pager="next" aria-label="Next page">Next ›</button>
+    </nav>
+
+    <noscript><p>Enable JavaScript to load the gallery.</p></noscript>
+  </div>
+</section>
+
+<!-- ============================================================
+     BIBTEX
+============================================================ -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title is-3">BibTeX</h2>
+<pre><code>@article{wang2026vggtomega,
+  title   = {VGGT-{$\Omega$}: Scaling Feed-Forward 3D Reconstruction
+             for Static and Dynamic Scenes},
+  author  = {Wang, Jianyuan and Chen, Minghao and Zhang, Shangzhan
+             and Karaev, Nikita and Sch\"onberger, Johannes and
+             Labatut, Patrick and Bojanowski, Piotr and Novotny, David
+             and Vedaldi, Andrea and Rupprecht, Christian},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</code></pre>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER + ACK
+============================================================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            We thank our colleagues at the Visual Geometry Group, University of
+            Oxford and Meta AI for invaluable discussions, infrastructure
+            support, and feedback throughout this project, and the authors of
+            VGGT, DUSt3R, MASt3R, MegaSaM, MonST3R, PI3, Depth Anything 3,
+            COLMAP, Grounding DINO, SuperPoint &amp; SuperGlue, ALIKED &amp;
+            LightGlue, and VGGSfM for the open-source baselines we build on.
+          </p>
+          <p>
+            This webpage template is adapted from
+            <a href="https://nerfies.github.io/">Nerfies</a>, under a
+            <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0 License</a>.
+            Source available
+            <a href="https://github.com/vggt-omega/vggt-omega.github.io" target="_blank" rel="noopener">on GitHub</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="./gallery.js?v=clean1"></script>
+</body>
+</html>
