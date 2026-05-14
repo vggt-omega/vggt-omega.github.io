@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="stylesheet" href="./vggto.css?v=clean1">
+  <link rel="stylesheet" href="./vggto.css?v=clean5">
   <link rel="icon" type="image/svg+xml" href="./assets/img/favicon.svg">
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -71,21 +71,23 @@
           <div class="column has-text-centered">
             <div class="publication-links">
               <span class="link-block">
-                <a href="#" class="external-link button is-normal is-rounded is-dark" aria-disabled="true">
+                <a href="./assets/paper/preview_v3.pdf" class="external-link button is-normal is-rounded is-dark" target="_blank" rel="noopener">
                   <span class="icon"><i class="fas fa-file-pdf"></i></span>
-                  <span>Paper (soon)</span>
+                  <span>Paper</span>
                 </a>
               </span>
+              <!--
               <span class="link-block">
                 <a href="#" class="external-link button is-normal is-rounded is-dark" aria-disabled="true">
                   <span class="icon"><i class="ai ai-arxiv"></i></span>
                   <span>arXiv (soon)</span>
                 </a>
               </span>
+              -->
               <span class="link-block">
-                <a href="#" class="external-link button is-normal is-rounded is-dark" aria-disabled="true">
+                <a href="https://github.com/facebookresearch/vggt-omega" class="external-link button is-normal is-rounded is-dark" target="_blank" rel="noopener">
                   <span class="icon"><i class="fab fa-github"></i></span>
-                  <span>Code (soon)</span>
+                  <span>Code</span>
                 </a>
               </span>
               <span class="link-block">
@@ -103,104 +105,44 @@
 </section>
 
 <!-- ============================================================
-     TEASER VIDEO
-============================================================ -->
-<section class="hero teaser">
-  <div class="container is-max-desktop">
-    <div class="hero-body">
-      <video id="teaser" autoplay muted loop playsinline>
-        <source src="./assets/videos/full/loop_closure__temple_castle__31996068_fps4.mp4" type="video/mp4">
-      </video>
-      <h2 class="subtitle has-text-centered">
-        Input frames (left) and the corresponding feed-forward 4D reconstruction (right) produced by <b>VGGT-Ω</b>.
-      </h2>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
      ABSTRACT
 ============================================================ -->
-<section class="section">
+<section class="section vggto-abstract">
   <div class="container is-max-desktop">
     <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
+      <div class="column is-full">
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            Recent feed-forward 3D reconstruction models, such as VGGT, have proven
+            Recent feed-forward reconstruction models, such as VGGT, have proven
             competitive with traditional optimization-based reconstructors while also
             providing geometry-aware features useful for other tasks. Here, we show
             that the quality of these models scales predictably with model and data
-            size. We introduce <b>VGGT-Ω</b>, which substantially improves
+            size. We do so by introducing VGGT-Ω, which substantially improves
             reconstruction accuracy, efficiency, and capabilities for both static and
-            dynamic scenes. To enable training at an unprecedented scale, we introduce
-            architectural changes that improve training efficiency, a high-quality
-            data annotation pipeline that supports dynamic scenes, and a
+            dynamic scenes. To enable training this model at an unprecedented scale,
+            we introduce architectural changes that improve training efficiency, a
+            high-quality data annotation pipeline that supports dynamic scenes, and a
             self-supervised learning protocol.
           </p>
           <p>
             We simplify VGGT's architecture by using a single dense prediction head
-            with multi-task supervision and removing expensive high-resolution
-            convolutional layers. We also use registers to aggregate scene information
-            into a compact representation, and introduce <b>register attention</b>,
-            which restricts cross-frame information exchange to these registers, in
-            part replacing global attention. VGGT-Ω uses only ∼30% of the GPU memory
-            of its predecessor during training, which lets us train with
-            <b>15× more supervised data</b> and leverage vast amounts of unlabeled
-            video. VGGT-Ω achieves strong results across multiple static and dynamic
-            benchmarks — e.g., improving the previous best Sintel camera AUC@3° by
-            <b>77%</b>. We also show that the learned registers can improve
-            vision-language-action models and support alignment with language,
-            suggesting that reconstruction can be a powerful and scalable proxy task
-            for spatial understanding.
+            with multi-task supervision and removing the expensive high-resolution
+            convolutional layers. We also use registers to aggregate scene
+            information into a compact representation and introduce register
+            attention, which restricts inter-frame information exchange to these
+            registers, in part replacing global attention. In this way, during
+            training, VGGT-Ω uses only ∼30% of the GPU memory of its
+            predecessor, which allows us to train VGGT-Ω with 15× more
+            supervised data than prior work and to leverage vast amounts of unlabeled
+            video data. VGGT-Ω achieves strong results for reconstruction of
+            static and dynamic scenes across multiple benchmarks, e.g., improving over
+            the previous best camera estimation accuracy on Sintel by 77%. We also
+            show that the learned registers can improve vision-language-action models
+            and support alignment with language, suggesting that reconstruction can be
+            a powerful and scalable proxy task for spatial understanding.
           </p>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     OVERVIEW
-============================================================ -->
-<section class="section">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered">Overview</h2>
-    <div class="content has-text-justified">
-      <p>
-        VGGT-Ω is a single feed-forward Transformer that ingests one or more
-        images and jointly predicts camera parameters and per-pixel depth for
-        every frame. Compared to VGGT, the model is leaner, scales further, and
-        handles dynamic content out of the box.
-      </p>
-    </div>
-    <div class="columns is-multiline">
-      <div class="column is-half">
-        <h4 class="title is-5">Register attention</h4>
-        <p>A subset of global-attention layers exchanges information only
-        through a small set of scene tokens. The registers carry global scene
-        information and reduce global-attention cost by ~25% FLOPs with no
-        measurable accuracy drop.</p>
-      </div>
-      <div class="column is-half">
-        <h4 class="title is-5">One dense head</h4>
-        <p>The expensive DPT blocks running above 1/4 resolution are replaced
-        by an MLP + pixel-shuffle. Tracks and point maps are kept only as
-        training-time losses, freeing memory without losing supervision.</p>
-      </div>
-      <div class="column is-half">
-        <h4 class="title is-5">Dynamic-aware data pipeline</h4>
-        <p>A 5-stage pipeline (VLM filter → dynamic mask → multi-method
-        matching → COLMAP + filtering → multi-view consistency) turns 40M
-        internet videos into ~0.8M high-quality annotated sequences, ~1/3
-        dynamic.</p>
-      </div>
-      <div class="column is-half">
-        <h4 class="title is-5">Teacher–student self-supervision</h4>
-        <p>An EMA teacher supervises a student through different augmentations
-        and frame orderings, learning from 18M unlabeled videos to improve
-        out-of-distribution generalization.</p>
       </div>
     </div>
   </div>
@@ -214,11 +156,11 @@
     <h2 class="title is-3 has-text-centered">Gallery</h2>
     <div class="content has-text-justified">
       <p>
-        15 reconstructions across static landmarks, dynamic action, aerial / FPV
+        Reconstructions across static landmarks, dynamic action, aerial / FPV
         flights, indoor captures, and underwater scenes. Each row shows the
-        input frames and an orbit render side-by-side on the left
-        (click to fullscreen); on the right, an interactive viewer of the
-        VGGT-Ω 4D reconstruction.
+        input frames and an orbit render side-by-side on the left (click to
+        fullscreen); on the right, an interactive viewer of the VGGT-Ω 4D
+        reconstruction.
       </p>
     </div>
 
@@ -263,27 +205,13 @@
     <div class="columns is-centered">
       <div class="column is-8">
         <div class="content">
-          <p>
-            We thank our colleagues at the Visual Geometry Group, University of
-            Oxford and Meta AI for invaluable discussions, infrastructure
-            support, and feedback throughout this project, and the authors of
-            VGGT, DUSt3R, MASt3R, MegaSaM, MonST3R, PI3, Depth Anything 3,
-            COLMAP, Grounding DINO, SuperPoint &amp; SuperGlue, ALIKED &amp;
-            LightGlue, and VGGSfM for the open-source baselines we build on.
-          </p>
-          <p>
-            This webpage template is adapted from
-            <a href="https://nerfies.github.io/">Nerfies</a>, under a
-            <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0 License</a>.
-            Source available
-            <a href="https://github.com/vggt-omega/vggt-omega.github.io" target="_blank" rel="noopener">on GitHub</a>.
-          </p>
+          <p>Acknowledgement in progress.</p>
         </div>
       </div>
     </div>
   </div>
 </footer>
 
-<script type="module" src="./gallery.js?v=clean1"></script>
+<script type="module" src="./gallery.js?v=clean10"></script>
 </body>
 </html>

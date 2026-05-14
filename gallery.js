@@ -9,16 +9,14 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// 15 top-rated entries + 20 additional entries that were trimmed from the
-// top-level gallery — kept here so the Nerfies-style page surfaces the full
-// set of cleaned scenes.
+// 15 top-rated entries.
 const NAMES = [
   // --- Page 1 ---
   "16539923_uhd_fps4",
+  "znz_20260430_11_fps3",
   "znz_20260430_18",
   "3747862_uhd",
-  // --- Page 2 (znz_20260430_11_fps3 promoted with fresh clean-GLB rebuild) ---
-  "znz_20260430_11_fps3",
+  // --- Page 2 ---
   "boat_sailing__speedboat_motor__18031863",
   "DE62PUU1FZg_0018150_0019950_seg0-1025",
   // --- remaining top-rated ---
@@ -31,26 +29,6 @@ const NAMES = [
   "lIjGmjqyiZk_0102750_0104550_seg0-1025",
   "wwm_20260430_11_fps4",
   "dyz_20260430_7_fps3",
-  // --- Additional scenes (removed from top-level gallery) ---
-  "hgp_20260430_29",
-  "znz_20260430_4",
-  "dyz_20260430_5_noz",
-  "17539322_uhd",
-  "dIu0c2vsNS0_0028950_0030750_seg0-1025",
-  "dyz_20260430_20_fps3",
-  "dyz_20260430_8_fps3",
-  "dyz_20260430_9_fps3",
-  "E_N7Qr8qjmU_0021750_0023550_seg1025-1800",
-  "E6xyJiYyFCA_0171728_0173528_seg0-1025",
-  "E6xyJiYyFCA_0262541_0264341_seg1025-1800",
-  "fpv_city__09_2871925",
-  "futou_short",
-  "hgp_20260430_1_fps3",
-  "hgp_20260430_2_fps3",
-  "LXKcD2zSPMc_0355066_0356866_seg1025-1800",
-  "yht_20260430_11_fps3",
-  "yht_20260430_15_fps3",
-  "znz_20260430_30_fps3",
 ];
 
 // Cache-buster appended to every <video src> so the browser re-fetches when
@@ -224,6 +202,7 @@ if (grid) {
 
   function loadGlbIntoViewer(viewer, url, statusEl) {
     return new Promise((resolve) => {
+      if (statusEl) statusEl.style.display = '';
       loader.load(url, (gltf) => {
         disposeModel(viewer);
         viewer.model = gltf.scene;
@@ -247,19 +226,27 @@ if (grid) {
         viewer.controls.target.set(0, 0, 0);
         viewer.controls.update();
 
-        if (statusEl) statusEl.textContent = '';
+        if (statusEl) {
+          statusEl.textContent = '';
+          statusEl.style.display = 'none';
+        }
         resolve(viewer);
       },
       (p) => {
         if (statusEl && p.total) {
+          statusEl.style.display = '';
           statusEl.textContent = `Loading… ${Math.round(p.loaded / p.total * 100)}%`;
         } else if (statusEl) {
+          statusEl.style.display = '';
           statusEl.textContent = `Loading… ${(p.loaded / 1e6).toFixed(1)} MB`;
         }
       },
       (err) => {
         console.warn('GLB load failed', url, err);
-        if (statusEl) statusEl.textContent = 'Failed to load 3D scene';
+        if (statusEl) {
+          statusEl.style.display = '';
+          statusEl.textContent = 'Failed to load 3D scene';
+        }
         resolve(null);
       });
     });
@@ -289,14 +276,6 @@ if (grid) {
     row.className = "row";
     row.dataset.name = name;
 
-    const header = document.createElement("div");
-    header.className = "row-h";
-    header.innerHTML = `
-      <span class="row-idx">${String(globalIndex + 1).padStart(2, "0")}</span>
-      <span class="row-name">${pretty(name)}</span>
-    `;
-    row.appendChild(header);
-
     const panels = document.createElement("div");
     panels.className = "row-panels";
     row.appendChild(panels);
@@ -325,6 +304,7 @@ if (grid) {
       // Detect narrow / portrait videos and tag the row for CSS layout change
       if (v.videoWidth && v.videoHeight && (v.videoWidth / v.videoHeight) < NARROW_THRESHOLD) {
         row.classList.add("portrait");
+        vPanel.style.aspectRatio = `${v.videoWidth} / ${v.videoHeight}`;
       }
     }, { once: true });
     v.addEventListener("loadeddata", () => {
@@ -346,11 +326,6 @@ if (grid) {
       }
     });
     vPanel.appendChild(v);
-    // tag in the corner
-    const vTag = document.createElement("span");
-    vTag.className = "row-tag";
-    vTag.textContent = "input  |  render — click for full";
-    vPanel.appendChild(vTag);
     panels.appendChild(vPanel);
 
     // RIGHT: GLB viewer — auto-loaded with the 1M-point downsampled GLB.
@@ -382,8 +357,7 @@ if (grid) {
     openBtn.title = "Open the full (un-downsampled) point cloud in a new tab";
     openBtn.innerHTML =
       `<span class="vb-dot"></span>` +
-      `<span class="vb-label">1M&nbsp;pts</span>` +
-      `<span class="vb-swap">open full&nbsp;↗</span>`;
+      `<span class="vb-label">Open Full 3D Viewer</span>`;
     toolbar.appendChild(openBtn);
     viewPanel.appendChild(toolbar);
 

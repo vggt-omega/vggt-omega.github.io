@@ -8,6 +8,7 @@
 .publication-title .omega {
   font-family: "Source Serif Pro", "Iowan Old Style", "Apple Garamond",
                "Baskerville", "Times New Roman", serif;
+  font-size: 1.22em;
   font-weight: 700;
   background: linear-gradient(135deg, #002147, #b8336a);
   -webkit-background-clip: text;
@@ -19,6 +20,14 @@
 .button[aria-disabled="true"] {
   opacity: .55;
   pointer-events: none;
+}
+
+/* Tighten the gap left after removing the top teaser video. */
+.hero .hero-body {
+  padding-bottom: 1.25rem;
+}
+.vggto-abstract {
+  padding-top: 1.25rem;
 }
 
 /* Teaser video sizing — fit width, contain to source aspect */
@@ -130,6 +139,15 @@ figure.image figcaption {
   object-fit: contain;
   background: #f5f5f5;
   display: block;
+}
+.row.portrait .row-panels {
+  grid-template-columns: minmax(260px, .76fr) minmax(360px, 1fr);
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.row.portrait .row-video video {
+  object-fit: contain;
 }
 .row-viewer {
   position: relative;
@@ -293,5 +311,9 @@ figure.image figcaption {
 }
 @media (max-width: 720px) {
   .row-panels { grid-template-columns: 1fr; }
+  .row.portrait .row-panels {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
   .iv-entry { grid-template-columns: 1fr; }
 }
