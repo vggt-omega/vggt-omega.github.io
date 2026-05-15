@@ -72,15 +72,25 @@
   left: 10px;
   top: 8px;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 10px;
-  letter-spacing: .1em;
+  font-size: 9px;
+  letter-spacing: .08em;
   text-transform: uppercase;
   color: #fff;
   background: rgba(20,20,22,.62);
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: 3px;
   pointer-events: none;
+}
+.demo-teaser-credit {
+  font-size: 8.5px;
+  letter-spacing: .04em;
+  text-transform: none;
+  opacity: .95;
 }
 .demo-teaser-controls {
   display: flex;
@@ -91,17 +101,37 @@
 .demo-teaser-btn {
   width: 30px;
   height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
-  border: 1px solid #d8d6d1;
+  border: 1px solid #d7ddd7;
   background: #fff;
-  color: #555;
+  color: #4e5a51;
   font: 600 13px/1 "Google Sans", "Noto Sans", sans-serif;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s, transform .15s;
+}
+.demo-teaser-btn:hover {
+  border-color: #b4ddb9;
+  color: #2f7d43;
+  box-shadow: 0 3px 8px rgba(152,213,162,.18);
 }
 .demo-teaser-btn.active {
-  background: #b8336a;
-  border-color: #b8336a;
-  color: #fff;
+  background: #bdecc5;
+  border-color: #bdecc5;
+  color: #1d4c28;
+  box-shadow: 0 5px 12px rgba(189,236,197,.36);
+}
+.demo-teaser-btn.active:hover {
+  background: #afe4b9;
+  border-color: #afe4b9;
+  color: #1d4c28;
+}
+.demo-teaser-btn:focus-visible {
+  outline: 2px solid rgba(189,236,197,.65);
+  outline-offset: 3px;
 }
 
 /* Teaser video sizing — fit width, contain to source aspect */
