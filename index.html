@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>VGGT-Ω: Scaling Feed-Forward 3D Reconstruction for Static and Dynamic Scenes</title>
+  <title>VGGT-Ω</title>
   <meta name="description" content="VGGT-Ω substantially improves the accuracy, efficiency, and scope of feed-forward 3D reconstruction for static and dynamic scenes.">
 
   <meta property="og:title" content="VGGT-Ω — Scaling Feed-Forward 3D Reconstruction">
@@ -19,8 +19,18 @@
   <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="stylesheet" href="./vggto.css?v=clean5">
+  <link rel="stylesheet" href="./vggto.css?v=teaserlabel1">
   <link rel="icon" type="image/svg+xml" href="./assets/img/favicon.svg">
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TSQGH8Q0WV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-TSQGH8Q0WV');
+  </script>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script defer src="./static/js/fontawesome.all.min.js"></script>
@@ -52,7 +62,7 @@
 
           <div class="is-size-5 publication-authors">
             <span class="author-block"><a href="https://jytime.github.io/">Jianyuan Wang</a><sup>1,2</sup>,</span>
-            <span class="author-block"><a href="https://silent-chen.github.io/">Minghao Chen</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="https://silent-chen.github.io/">Minghao Chen</a><sup>1,2</sup>,</span>
             <span class="author-block"><a href="https://scholar.google.com/citations?user=FUDsZkEAAAAJ&amp;hl=zh-CN">Shangzhan Zhang</a><sup>1</sup>,</span>
             <span class="author-block"><a href="https://nikitakaraevv.github.io/">Nikita Karaev</a><sup>1</sup>,</span>
             <span class="author-block"><a href="https://demuc.de/">Johannes Schönberger</a><sup>2</sup>,</span>
@@ -67,6 +77,8 @@
             <span class="author-block"><sup>1</sup>Visual Geometry Group, University of Oxford&nbsp;&nbsp;</span>
             <span class="author-block"><sup>2</sup>Meta AI</span>
           </div>
+
+          <div class="vggto-venue">CVPR 2026 Oral</div>
 
           <div class="column has-text-centered">
             <div class="publication-links">
@@ -87,7 +99,13 @@
               <span class="link-block">
                 <a href="https://github.com/facebookresearch/vggt-omega" class="external-link button is-normal is-rounded is-dark" target="_blank" rel="noopener">
                   <span class="icon"><i class="fab fa-github"></i></span>
-                  <span>Code</span>
+                  <span>Code (visible in hours)</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://huggingface.co/facebook/VGGT-Omega" class="external-link button is-normal is-rounded is-dark" target="_blank" rel="noopener">
+                  <span class="icon"><i class="fas fa-cube"></i></span>
+                  <span>Model</span>
                 </a>
               </span>
               <span class="link-block">
@@ -105,10 +123,39 @@
 </section>
 
 <!-- ============================================================
+     DEMO TEASER
+============================================================ -->
+<section class="section vggto-demo-teaser">
+  <div class="container is-max-widescreen">
+    <div class="demo-teaser-grid">
+      <figure class="demo-teaser-panel">
+        <video id="demoInputVideo" autoplay muted playsinline preload="auto">
+          <source src="./assets/demos/transmission_video.mp4" type="video/mp4">
+        </video>
+        <figcaption>
+          <span>Input Video</span>
+          <span class="demo-teaser-credit">transmission@parhoman</span>
+        </figcaption>
+      </figure>
+      <figure class="demo-teaser-panel">
+        <video id="demoReconVideo" autoplay muted playsinline preload="auto">
+          <source src="./assets/demos/transmission_v1.mp4" type="video/mp4">
+        </video>
+        <figcaption>Reconstruction</figcaption>
+      </figure>
+    </div>
+    <div class="demo-teaser-controls" aria-label="Demo selector">
+      <button type="button" class="demo-teaser-btn active" data-demo-index="0" aria-label="Show demo 1" aria-pressed="true">1</button>
+      <button type="button" class="demo-teaser-btn" data-demo-index="1" aria-label="Show demo 2" aria-pressed="false">2</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
      ABSTRACT
 ============================================================ -->
 <section class="section vggto-abstract">
-  <div class="container is-max-desktop">
+  <div class="container is-max-widescreen">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <h2 class="title is-3">Abstract</h2>
@@ -182,15 +229,11 @@
      BIBTEX
 ============================================================ -->
 <section class="section" id="BibTeX">
-  <div class="container is-max-desktop content">
+  <div class="container is-max-widescreen content">
     <h2 class="title is-3">BibTeX</h2>
 <pre><code>@article{wang2026vggtomega,
-  title   = {VGGT-{$\Omega$}: Scaling Feed-Forward 3D Reconstruction
-             for Static and Dynamic Scenes},
-  author  = {Wang, Jianyuan and Chen, Minghao and Zhang, Shangzhan
-             and Karaev, Nikita and Sch\"onberger, Johannes and
-             Labatut, Patrick and Bojanowski, Piotr and Novotny, David
-             and Vedaldi, Andrea and Rupprecht, Christian},
+  title   = {VGGT-{$\Omega$}: Scaling Feed-Forward 3D Reconstruction for Static and Dynamic Scenes},
+  author  = {Wang, Jianyuan and Chen, Minghao and Zhang, Shangzhan and Karaev, Nikita and Sch\"onberger, Johannes and Labatut, Patrick and Bojanowski, Piotr and Novotny, David and Vedaldi, Andrea and Rupprecht, Christian},
   journal = {arXiv preprint},
   year    = {2026}
 }</code></pre>
@@ -198,20 +241,105 @@
 </section>
 
 <!-- ============================================================
-     FOOTER + ACK
+     ACKNOWLEDGEMENTS
 ============================================================ -->
-<footer class="footer">
-  <div class="container">
-    <div class="columns is-centered">
-      <div class="column is-8">
-        <div class="content">
-          <p>Acknowledgement in progress.</p>
-        </div>
-      </div>
-    </div>
+<section class="section" id="Acknowledgements">
+  <div class="container is-max-widescreen content">
+    <h2 class="title is-3">Acknowledgements</h2>
+    <p>
+      We greatly appreciate the support of the many people who have helped shape
+      VGGT-Ω. We are currently preparing the full acknowledgements and will
+      update this section soon.
+    </p>
   </div>
-</footer>
+</section>
 
+<script>
+(() => {
+  const demos = [
+    {
+      input: './assets/demos/transmission_video.mp4',
+      recon: './assets/demos/transmission_v1.mp4',
+    },
+    {
+      input: './assets/demos/fight_video.mp4',
+      recon: './assets/demos/fight_v1.mp4',
+    },
+  ];
+  const inputVideo = document.getElementById('demoInputVideo');
+  const reconVideo = document.getElementById('demoReconVideo');
+  const videos = [inputVideo, reconVideo].filter(Boolean);
+  const buttons = Array.from(document.querySelectorAll('[data-demo-index]'));
+  const endedVideos = new Set();
+  let replayTimer = null;
+
+  function clearReplayTimer() {
+    if (!replayTimer) return;
+    window.clearTimeout(replayTimer);
+    replayTimer = null;
+  }
+
+  function playVideo(video) {
+    if (!video) return;
+    const p = video.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  }
+
+  function playPairFromStart() {
+    clearReplayTimer();
+    endedVideos.clear();
+    videos.forEach((video) => {
+      video.pause();
+      try { video.currentTime = 0; } catch (_) {}
+      playVideo(video);
+    });
+  }
+
+  function setVideoSource(video, src) {
+    if (!video) return;
+    const nextSrc = new URL(src, window.location.href).href;
+    if (video.currentSrc === nextSrc || video.src === nextSrc) return;
+    video.src = nextSrc;
+    video.load();
+  }
+
+  function waitForVideoMetadata(video) {
+    if (!video || video.readyState >= 1) return Promise.resolve();
+    return new Promise((resolve) => {
+      video.addEventListener('loadedmetadata', resolve, { once: true });
+    });
+  }
+
+  function setDemo(index) {
+    const demo = demos[index];
+    if (!demo) return;
+    clearReplayTimer();
+    setVideoSource(inputVideo, demo.input);
+    setVideoSource(reconVideo, demo.recon);
+    buttons.forEach((button) => {
+      const active = Number(button.dataset.demoIndex) === index;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    Promise.all(videos.map(waitForVideoMetadata)).then(playPairFromStart);
+  }
+
+  videos.forEach((video) => {
+    video.loop = false;
+    video.addEventListener('ended', () => {
+      endedVideos.add(video);
+      if (endedVideos.size === videos.length && !replayTimer) {
+        replayTimer = window.setTimeout(playPairFromStart, 1000);
+      }
+    });
+  });
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => setDemo(Number(button.dataset.demoIndex)));
+  });
+  setDemo(0);
+})();
+</script>
 <script type="module" src="./gallery.js?v=clean10"></script>
 </body>
 </html>
