@@ -220,6 +220,7 @@ figure.image figcaption {
 }
 .row-panels {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
   gap: 8px;
   background: #f5f5f5;
@@ -227,9 +228,9 @@ figure.image figcaption {
   padding: 8px;
   box-shadow: 0 6px 12px rgba(0,0,0,.15);
 }
+.row-panels > * { flex: 0 0 auto; }
 .row-video {
-  flex: 1.55 1 0;
-  min-width: 0;
+  width: 100%;
   position: relative;
   background: #f5f5f5;
   aspect-ratio: 2580 / 720;
@@ -246,22 +247,16 @@ figure.image figcaption {
   display: block;
 }
 .row.portrait .row-panels {
-  max-width: 980px;
+  max-width: 720px;
   margin-left: auto;
   margin-right: auto;
-}
-.row.portrait .row-video {
-  flex: 0.76 1 260px;
-}
-.row.portrait .row-viewer {
-  flex: 1 1 360px;
 }
 .row.portrait .row-video video {
   object-fit: contain;
 }
 .row-viewer {
-  flex: 1 1 0;
-  min-width: 0;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   position: relative;
   background: #f5f5f5;
   overflow: hidden;
@@ -422,15 +417,8 @@ figure.image figcaption {
   .iv-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
-  .row-panels { flex-direction: column; }
-  /* Column direction: the desktop flex-basis: 0 would pin main-axis (height)
-     to 0. Use auto so each panel sizes from its aspect-ratio instead. The
-     viewer has no aspect-ratio of its own (its canvas child is absolute and
-     contributes 0), so give it an explicit one. */
-  .row-panels > * { flex: 0 0 auto; }
   .row-viewer { aspect-ratio: 4 / 3; }
   .row.portrait .row-panels {
-    flex-direction: column;
     max-width: 100%;
   }
   .row.portrait .row-viewer { aspect-ratio: 4 / 3; }

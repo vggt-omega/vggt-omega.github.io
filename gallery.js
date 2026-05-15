@@ -218,8 +218,8 @@ if (grid) {
         const ctr  = box.getCenter(new THREE.Vector3());
         viewer.model.position.sub(ctr);
         const maxDim = Math.max(sz.x, sz.y, sz.z) || 1;
-        const dist = maxDim / (2 * Math.tan(viewer.camera.fov * Math.PI / 360)) * 1.6;
-        viewer.camera.position.set(dist * 0.55, dist * 0.35, dist);
+        const dist = maxDim / (2 * Math.tan(viewer.camera.fov * Math.PI / 360)) * 0.85;
+        viewer.camera.position.set(dist * 0.38, dist * 0.24, dist * 0.72);
         viewer.camera.near = dist / 200;
         viewer.camera.far  = dist * 100;
         viewer.camera.updateProjectionMatrix();
