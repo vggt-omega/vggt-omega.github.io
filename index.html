@@ -264,14 +264,17 @@
     {
       input: './assets/demos/transmission_video.mp4',
       recon: './assets/demos/transmission_v1.mp4',
+      credit: 'transmission@parhoman',
     },
     {
       input: './assets/demos/fight_video.mp4',
       recon: './assets/demos/fight_v1.mp4',
+      credit: '',
     },
   ];
   const inputVideo = document.getElementById('demoInputVideo');
   const reconVideo = document.getElementById('demoReconVideo');
+  const creditEl = document.querySelector('.demo-teaser-credit');
   const videos = [inputVideo, reconVideo].filter(Boolean);
   const buttons = Array.from(document.querySelectorAll('[data-demo-index]'));
   const endedVideos = new Set();
@@ -320,6 +323,10 @@
     clearReplayTimer();
     setVideoSource(inputVideo, demo.input);
     setVideoSource(reconVideo, demo.recon);
+    if (creditEl) {
+      creditEl.textContent = demo.credit || '';
+      creditEl.style.display = demo.credit ? '' : 'none';
+    }
     buttons.forEach((button) => {
       const active = Number(button.dataset.demoIndex) === index;
       button.classList.toggle('active', active);
