@@ -415,10 +415,16 @@ figure.image figcaption {
 }
 @media (max-width: 720px) {
   .row-panels { grid-template-columns: 1fr; }
+  /* When the two panels stack vertically the viewer no longer inherits its
+     height from .row-video's aspect-ratio, so give it an explicit one or the
+     absolute-positioned canvas collapses to 0 px and the row looks empty on
+     iOS Safari. */
+  .row-viewer { aspect-ratio: 4 / 3; }
   .row.portrait .row-panels {
     grid-template-columns: 1fr;
     max-width: 100%;
   }
+  .row.portrait .row-viewer { aspect-ratio: 4 / 3; }
   .demo-teaser-grid {
     flex-direction: column;
     overflow-x: visible;
