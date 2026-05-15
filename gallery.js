@@ -2,14 +2,14 @@
    Gallery: vertical stack of rows. Each row =
      left  → cropped source half of the composite video (auto-playing)
      right → interactive Three.js GLB viewer (click to load on demand)
-   Pagination: 6 rows per page.
+   Pagination: 3 rows per page.
 ===================================================================== */
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// 15 top-rated entries.
+// 14 top-rated entries.
 const NAMES = [
   // --- Page 1 ---
   "16539923_uhd_fps4",
@@ -24,7 +24,6 @@ const NAMES = [
   "loop_closure__temple_castle__31996068_fps4",
   "dyz_20260430_19_fps3",
   "lIjGmjqyiZk_0046950_0048750_seg0-1025",
-  "13606137_uhd",
   "DjaOuqgRWGQ_0041828_0043628_seg0-1025_hstack",
   "lIjGmjqyiZk_0102750_0104550_seg0-1025",
   "wwm_20260430_11_fps4",
