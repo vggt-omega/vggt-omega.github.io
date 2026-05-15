@@ -219,16 +219,17 @@ figure.image figcaption {
   pointer-events: none;
 }
 .row-panels {
-  display: grid;
-  grid-template-columns: 1.55fr 1fr;
+  display: flex;
+  align-items: stretch;
   gap: 8px;
   background: #f5f5f5;
-  align-items: stretch;
   border-radius: 15px;
   padding: 8px;
   box-shadow: 0 6px 12px rgba(0,0,0,.15);
 }
 .row-video {
+  flex: 1.55 1 0;
+  min-width: 0;
   position: relative;
   background: #f5f5f5;
   aspect-ratio: 2580 / 720;
@@ -245,15 +246,22 @@ figure.image figcaption {
   display: block;
 }
 .row.portrait .row-panels {
-  grid-template-columns: minmax(260px, .76fr) minmax(360px, 1fr);
   max-width: 980px;
   margin-left: auto;
   margin-right: auto;
+}
+.row.portrait .row-video {
+  flex: 0.76 1 260px;
+}
+.row.portrait .row-viewer {
+  flex: 1 1 360px;
 }
 .row.portrait .row-video video {
   object-fit: contain;
 }
 .row-viewer {
+  flex: 1 1 0;
+  min-width: 0;
   position: relative;
   background: #f5f5f5;
   overflow: hidden;
@@ -414,14 +422,15 @@ figure.image figcaption {
   .iv-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
-  .row-panels { grid-template-columns: 1fr; }
-  /* When the two panels stack vertically the viewer no longer inherits its
-     height from .row-video's aspect-ratio, so give it an explicit one or the
-     absolute-positioned canvas collapses to 0 px and the row looks empty on
-     iOS Safari. */
+  .row-panels { flex-direction: column; }
+  /* Column direction: the desktop flex-basis: 0 would pin main-axis (height)
+     to 0. Use auto so each panel sizes from its aspect-ratio instead. The
+     viewer has no aspect-ratio of its own (its canvas child is absolute and
+     contributes 0), so give it an explicit one. */
+  .row-panels > * { flex: 0 0 auto; }
   .row-viewer { aspect-ratio: 4 / 3; }
   .row.portrait .row-panels {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     max-width: 100%;
   }
   .row.portrait .row-viewer { aspect-ratio: 4 / 3; }
