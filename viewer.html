@@ -123,6 +123,76 @@ const GLB_NAME_OVERRIDES = {
   "DjaOuqgRWGQ_0041828_0043628_seg0-1025_hstack":
     "DjaOuqgRWGQ_0041828_0043628_seg0-1025",
 };
+const CAMERA_VIEWS_VER = "views1";
+const DEFAULT_THREE_CAMERA = {
+  direction: { x: 0.232788, y: 0.200791, z: 0.951574 },
+  targetScale: { x: -0.011213, y: -0.007986, z: 0.00858 },
+  fitScale: 1.046048,
+};
+let cameraViews = {
+  default: DEFAULT_THREE_CAMERA,
+  scenes: {},
+};
+
+function numericVector(value, fallback) {
+  const v = value || {};
+  return {
+    x: Number.isFinite(v.x) ? v.x : fallback.x,
+    y: Number.isFinite(v.y) ? v.y : fallback.y,
+    z: Number.isFinite(v.z) ? v.z : fallback.z,
+  };
+}
+
+function normalizeCameraSpec(spec, fallback = DEFAULT_THREE_CAMERA) {
+  if (!spec || typeof spec !== "object") return fallback;
+  return {
+    direction: numericVector(spec.direction, fallback.direction),
+    targetScale: numericVector(spec.targetScale || spec.targetScaleVsMaxDim, fallback.targetScale),
+    fitScale: Number.isFinite(spec.fitScale) ? spec.fitScale :
+      (Number.isFinite(spec.fitScaleVsBase) ? spec.fitScaleVsBase : fallback.fitScale),
+  };
+}
+
+async function loadCameraViews() {
+  try {
+    const response = await fetch(`./camera-views.json?${CAMERA_VIEWS_VER}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const defaultSpec = normalizeCameraSpec(data.default, DEFAULT_THREE_CAMERA);
+    const scenes = {};
+    for (const [sceneName, spec] of Object.entries(data.scenes || {})) {
+      scenes[sceneName] = normalizeCameraSpec(spec, defaultSpec);
+    }
+    cameraViews = { default: defaultSpec, scenes };
+  } catch (error) {
+    console.warn("Using built-in camera defaults; failed to load camera-views.json", error);
+  }
+}
+
+function cameraForScene(sceneName) {
+  return cameraViews.scenes[sceneName] || cameraViews.default || DEFAULT_THREE_CAMERA;
+}
+
+function applyInitialCamera(camera, controls, maxDim, sceneName) {
+  const spec = cameraForScene(sceneName);
+  const baseDist = maxDim / (2 * Math.tan(camera.fov * Math.PI / 360));
+  controls.target.set(
+    maxDim * spec.targetScale.x,
+    maxDim * spec.targetScale.y,
+    maxDim * spec.targetScale.z
+  );
+  camera.position.set(
+    controls.target.x + baseDist * spec.fitScale * spec.direction.x,
+    controls.target.y + baseDist * spec.fitScale * spec.direction.y,
+    controls.target.z + baseDist * spec.fitScale * spec.direction.z
+  );
+  camera.near = baseDist / 200;
+  camera.far = baseDist * 100;
+  camera.updateProjectionMatrix();
+  controls.update();
+}
+
+const cameraViewsPromise = loadCameraViews();
 const glbFile = (GLB_NAME_OVERRIDES[name] || name) + ".glb";
 // Full-resolution GLBs are hosted on Hugging Face Datasets (too large for the
 // GitHub repo). Resolve URL serves the raw file with permissive CORS so the
@@ -213,7 +283,7 @@ let lastFetchedMB = 0;
 if (name) {
   hud.textContent = "Loading…";
   loader.load(url,
-    (gltf) => {
+    async (gltf) => {
       model = gltf.scene;
       scene.add(model);
 
@@ -227,13 +297,8 @@ if (name) {
       if (camsGroup) model.add(camsGroup);
 
       const maxDim = Math.max(sz.x, sz.y, sz.z) || 1;
-      const dist = maxDim / (2 * Math.tan(camera.fov * Math.PI / 360)) * 1.6;
-      camera.position.set(dist * 0.55, dist * 0.35, dist);
-      camera.near = dist / 200;
-      camera.far  = dist * 100;
-      camera.updateProjectionMatrix();
-      controls.target.set(0, 0, 0);
-      controls.update();
+      await cameraViewsPromise;
+      applyInitialCamera(camera, controls, maxDim, name);
 
       savedCam = {
         pos: camera.position.clone(),

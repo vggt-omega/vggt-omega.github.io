@@ -199,17 +199,14 @@
 <!-- ============================================================
      POINT-OF-VIEW EXAMPLES
 ============================================================ -->
-<section class="section">
+<section class="section" id="gallery">
   <div class="container is-max-widescreen">
-    <h2 class="title is-3 has-text-centered">Point-of-View Examples</h2>
+    <h2 class="title is-3 has-text-centered">Examples</h2>
     <div class="content has-text-justified">
       <p>
-        Reconstructions across static landmarks, dynamic action, aerial / FPV
-        flights, indoor captures, and underwater scenes. Each row stacks a
-        preview video above an interactive 3D viewer: the video combines the
-        input frames with an orbit render for quick playback (click to
-        fullscreen), while the viewer below lets you explore the VGGT-Ω 4D
-        reconstruction directly.
+        Reconstructions of point-of-view sequences across static landmarks,
+        dynamic action, aerial / FPV flights, indoor captures, and underwater
+        scenes.
       </p>
     </div>
 
@@ -217,11 +214,7 @@
       <!-- rows injected by gallery.js -->
     </div>
 
-    <nav class="pager" id="galleryPager" aria-label="Point-of-view examples pagination">
-      <button type="button" class="pager-btn" data-pager="prev" aria-label="Previous page">‹ Prev</button>
-      <div class="pager-pages" id="pagerPages" role="group" aria-label="Pages"></div>
-      <button type="button" class="pager-btn" data-pager="next" aria-label="Next page">Next ›</button>
-    </nav>
+    <div class="gallery-thumbs" id="galleryThumbs" role="group" aria-label="Point-of-view example selector"></div>
 
     <noscript><p>Enable JavaScript to load the examples.</p></noscript>
   </div>

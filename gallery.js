@@ -1,16 +1,15 @@
 /* =====================================================================
-   Gallery: vertical stack of rows. Each row =
-     left  → cropped source half of the composite video (auto-playing)
-     right → interactive Three.js GLB viewer (click to load on demand)
-   Pagination: 3 rows per page.
+   Gallery: one example at a time. Each example =
+     top    → composite preview video (auto-playing)
+     bottom → interactive Three.js GLB viewer
+   Switching uses the same video-thumbnail pattern as the demo teaser.
 ===================================================================== */
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// 12 top-rated entries. Wide composites are paginated 3 per page; the
-// ~square / portrait clips listed in PORTRAIT_NAMES get their own page.
+// Selected entries. Each name becomes its own selectable example.
 const NAMES = [
   "16539923_uhd_fps4",
   "znz_20260430_11_fps3",
@@ -19,39 +18,32 @@ const NAMES = [
   "boat_sailing__speedboat_motor__18031863",
   "DE62PUU1FZg_0018150_0019950_seg0-1025",
   "dyz_20260430_15",
-  "loop_closure__temple_castle__31996068_fps4",
-  "dyz_20260430_19_fps3",
+  // "loop_closure__temple_castle__31996068_fps4",
+  // "dyz_20260430_19_fps3",
   "DjaOuqgRWGQ_0041828_0043628_seg0-1025_hstack",
-  "lIjGmjqyiZk_0102750_0104550_seg0-1025",
   "wwm_20260430_11_fps4",
+  "lIjGmjqyiZk_0102750_0104550_seg0-1025",
 ];
 
 // Cache-buster appended to every <video src> so the browser re-fetches when
 // we re-encode a clip (browsers cache MP4 bodies aggressively and don't honor
 // HTML query-string cache-busters on the parent index.html alone).
 const VIDEO_VER = "clean1";
+const THUMB_VER = "left1";
+const CAMERA_VIEWS_VER = "views1";
 const PREVIEW   = "./assets/videos/preview/";
+const THUMBS    = "./assets/videos/thumbs/";
 const FULL      = "./assets/videos/full/";
-const PAGE_SIZE = 3;
 // Videos whose composite is narrow / portrait — detect via aspect ratio after
 // loadedmetadata and add .portrait to the row for a different grid layout.
 const NARROW_THRESHOLD = 2.0;  // width/height < this → portrait row
-// Clips that are NOT the wide side-by-side composite (≈square / portrait,
-// width/height < NARROW_THRESHOLD). They break the wide-row layout, so they
-// are pulled out and shown together on their own dedicated page.
 const PORTRAIT_NAMES = new Set([
   "wwm_20260430_11_fps4",
 ]);
-const LANDSCAPE = NAMES.filter((n) => !PORTRAIT_NAMES.has(n));
-const PORTRAIT  = NAMES.filter((n) =>  PORTRAIT_NAMES.has(n));
-// Page model: wide composites in PAGE_SIZE-chunks, then one page that holds
-// all portrait clips (only added if there are any).
-const PAGES = [];
-for (let i = 0; i < LANDSCAPE.length; i += PAGE_SIZE) {
-  PAGES.push(LANDSCAPE.slice(i, i + PAGE_SIZE));
-}
-if (PORTRAIT.length) PAGES.push(PORTRAIT.slice());
+const PAGES = NAMES.map((name) => [name]);
 const TOTAL_PAGES = Math.max(1, PAGES.length);
+const initialExample = new URLSearchParams(window.location.search).get("example");
+const INITIAL_PAGE = Math.max(0, NAMES.indexOf(initialExample));
 // Downsampled GLBs (~1M points each, ~17 MB) — committed in the repo.
 const GLB_1M_DIR   = "./assets/glb/";
 // Full-resolution GLBs (3-13M points, 60-470 MB each) — hosted on Hugging Face.
@@ -65,6 +57,74 @@ const GLB_VER = "clean1";
 function glbPath1M(name)   { return GLB_1M_DIR   + (GLB_NAME_OVERRIDES[name] || name) + ".glb?" + GLB_VER; }
 function glbPathFull(name) { return GLB_FULL_DIR + (GLB_NAME_OVERRIDES[name] || name) + ".glb?" + GLB_VER; }
 
+const DEFAULT_THREE_CAMERA = {
+  direction: { x: 0.232788, y: 0.200791, z: 0.951574 },
+  targetScale: { x: -0.011213, y: -0.007986, z: 0.00858 },
+  fitScale: 1.046048,
+};
+let cameraViews = {
+  default: DEFAULT_THREE_CAMERA,
+  scenes: {},
+};
+
+function numericVector(value, fallback) {
+  const v = value || {};
+  return {
+    x: Number.isFinite(v.x) ? v.x : fallback.x,
+    y: Number.isFinite(v.y) ? v.y : fallback.y,
+    z: Number.isFinite(v.z) ? v.z : fallback.z,
+  };
+}
+
+function normalizeCameraSpec(spec, fallback = DEFAULT_THREE_CAMERA) {
+  if (!spec || typeof spec !== "object") return fallback;
+  return {
+    direction: numericVector(spec.direction, fallback.direction),
+    targetScale: numericVector(spec.targetScale || spec.targetScaleVsMaxDim, fallback.targetScale),
+    fitScale: Number.isFinite(spec.fitScale) ? spec.fitScale :
+      (Number.isFinite(spec.fitScaleVsBase) ? spec.fitScaleVsBase : fallback.fitScale),
+  };
+}
+
+async function loadCameraViews() {
+  try {
+    const response = await fetch(`./camera-views.json?${CAMERA_VIEWS_VER}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const defaultSpec = normalizeCameraSpec(data.default, DEFAULT_THREE_CAMERA);
+    const scenes = {};
+    for (const [name, spec] of Object.entries(data.scenes || {})) {
+      scenes[name] = normalizeCameraSpec(spec, defaultSpec);
+    }
+    cameraViews = { default: defaultSpec, scenes };
+  } catch (error) {
+    console.warn("Using built-in camera defaults; failed to load camera-views.json", error);
+  }
+}
+
+function cameraForScene(name) {
+  return cameraViews.scenes[name] || cameraViews.default || DEFAULT_THREE_CAMERA;
+}
+
+function applyInitialCamera(camera, controls, maxDim, name) {
+  const spec = cameraForScene(name);
+  const baseDist = maxDim / (2 * Math.tan(camera.fov * Math.PI / 360));
+  controls.target.set(
+    maxDim * spec.targetScale.x,
+    maxDim * spec.targetScale.y,
+    maxDim * spec.targetScale.z
+  );
+  camera.position.set(
+    controls.target.x + baseDist * spec.fitScale * spec.direction.x,
+    controls.target.y + baseDist * spec.fitScale * spec.direction.y,
+    controls.target.z + baseDist * spec.fitScale * spec.direction.z
+  );
+  camera.near = baseDist / 200;
+  camera.far = baseDist * 100;
+  camera.updateProjectionMatrix();
+  controls.update();
+}
+
 function pretty(name) {
   return name
     .replace(/_fps\d+$/, "")
@@ -73,12 +133,12 @@ function pretty(name) {
     .replace(/_/g, " ");
 }
 
-const grid       = document.getElementById("galleryGrid");
-const pagerPages = document.getElementById("pagerPages");
-const pagerEl    = document.getElementById("galleryPager");
+const grid          = document.getElementById("galleryGrid");
+const galleryThumbs = document.getElementById("galleryThumbs");
 if (grid) {
 
   let currentPage = 0;
+  let thumbButtons = [];
 
   // ---- viewer state ---------------------------------------------------
   const loader = new GLTFLoader();
@@ -210,7 +270,7 @@ if (grid) {
     return { canvas, renderer, scene, camera, controls, model: null };
   }
 
-  function loadGlbIntoViewer(viewer, url, statusEl) {
+  function loadGlbIntoViewer(viewer, url, statusEl, name) {
     return new Promise((resolve) => {
       if (statusEl) statusEl.style.display = '';
       loader.load(url, (gltf) => {
@@ -228,13 +288,7 @@ if (grid) {
         const ctr  = box.getCenter(new THREE.Vector3());
         viewer.model.position.sub(ctr);
         const maxDim = Math.max(sz.x, sz.y, sz.z) || 1;
-        const dist = maxDim / (2 * Math.tan(viewer.camera.fov * Math.PI / 360)) * 0.85;
-        viewer.camera.position.set(dist * 0.38, dist * 0.24, dist * 0.72);
-        viewer.camera.near = dist / 200;
-        viewer.camera.far  = dist * 100;
-        viewer.camera.updateProjectionMatrix();
-        viewer.controls.target.set(0, 0, 0);
-        viewer.controls.update();
+        applyInitialCamera(viewer.camera, viewer.controls, maxDim, name);
 
         if (statusEl) {
           statusEl.textContent = '';
@@ -281,7 +335,7 @@ if (grid) {
   tick();
 
   // ---- row factory ----------------------------------------------------
-  function makeRow(name, globalIndex, isPortrait) {
+  function makeRow(name, isPortrait) {
     const row = document.createElement("article");
     row.className = "row";
     row.dataset.name = name;
@@ -383,10 +437,65 @@ if (grid) {
     // Build the viewer and start loading the 1M GLB right away.
     const viewer = makeViewer(canvas);
     activeViewers.push(viewer);
-    loadGlbIntoViewer(viewer, glbPath1M(name), status);
+    loadGlbIntoViewer(viewer, glbPath1M(name), status, name);
 
     panels.appendChild(viewPanel);
     return row;
+  }
+
+  function prepareThumbVideo(video) {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+  }
+
+  function playThumbVideo(video) {
+    prepareThumbVideo(video);
+    const p = video.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  }
+
+  function resetThumbVideo(video) {
+    video.pause();
+    try { video.currentTime = Math.min(0.1, video.duration || 0.1); } catch (_) {}
+  }
+
+  function createGalleryThumbnailControls() {
+    if (!galleryThumbs) return [];
+    galleryThumbs.innerHTML = "";
+    return NAMES.map((name, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "gallery-thumb";
+      button.dataset.pageIndex = String(index);
+      button.setAttribute("aria-label", `Show ${pretty(name)} example`);
+      button.setAttribute("aria-pressed", "false");
+
+      const thumb = document.createElement("video");
+      prepareThumbVideo(thumb);
+      thumb.preload = "metadata";
+      thumb.tabIndex = -1;
+      thumb.setAttribute("aria-hidden", "true");
+      thumb.src = THUMBS + name + ".mp4?" + THUMB_VER;
+      thumb.addEventListener("loadedmetadata", () => {
+        if (thumb.videoWidth && thumb.videoHeight) {
+          button.style.aspectRatio = `${thumb.videoWidth} / ${thumb.videoHeight}`;
+        }
+        resetThumbVideo(thumb);
+      }, { once: true });
+
+      button.appendChild(thumb);
+      button.addEventListener("mouseenter", () => playThumbVideo(thumb));
+      button.addEventListener("focus", () => playThumbVideo(thumb));
+      button.addEventListener("mouseleave", () => resetThumbVideo(thumb));
+      button.addEventListener("blur", () => resetThumbVideo(thumb));
+      button.addEventListener("click", () => renderPage(index, { scroll: false }));
+      galleryThumbs.appendChild(button);
+      return button;
+    });
   }
 
   // ---- quality swap on fullscreen ------------------------------------
@@ -423,7 +532,7 @@ if (grid) {
     }
   });
 
-  // ---- pagination -----------------------------------------------------
+  // ---- example selection ---------------------------------------------
   function renderPage(page, opts) {
     page = Math.max(0, Math.min(page, TOTAL_PAGES - 1));
     currentPage = page;
@@ -441,10 +550,10 @@ if (grid) {
     grid.innerHTML = "";
 
     const items = PAGES[page] || [];
-    items.forEach((name, i) => {
-      grid.appendChild(makeRow(name, i, PORTRAIT_NAMES.has(name)));
+    items.forEach((name) => {
+      grid.appendChild(makeRow(name, PORTRAIT_NAMES.has(name)));
     });
-    renderPager();
+    renderExampleSelector();
 
     if (opts && opts.scroll) {
       const sec = document.getElementById("gallery");
@@ -452,35 +561,25 @@ if (grid) {
     }
   }
 
-  function renderPager() {
-    if (!pagerPages) return;
-    pagerPages.innerHTML = "";
-    for (let p = 0; p < TOTAL_PAGES; p++) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "pager-num" + (p === currentPage ? " active" : "");
-      b.textContent = String(p + 1);
-      if (p === currentPage) b.setAttribute("aria-current", "page");
-      b.addEventListener("click", () => renderPage(p, { scroll: true }));
-      pagerPages.appendChild(b);
-    }
-    if (pagerEl) {
-      const prev = pagerEl.querySelector('[data-pager="prev"]');
-      const next = pagerEl.querySelector('[data-pager="next"]');
-      if (prev) prev.disabled = (currentPage === 0);
-      if (next) next.disabled = (currentPage === TOTAL_PAGES - 1);
-    }
-  }
-
-  if (pagerEl) {
-    pagerEl.addEventListener("click", (e) => {
-      const t = e.target.closest("[data-pager]");
-      if (!t) return;
-      const dir = t.getAttribute("data-pager");
-      if (dir === "prev") renderPage(currentPage - 1, { scroll: true });
-      else if (dir === "next") renderPage(currentPage + 1, { scroll: true });
+  function renderExampleSelector() {
+    thumbButtons.forEach((button) => {
+      const active = Number(button.dataset.pageIndex) === currentPage;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+      if (active) {
+        button.setAttribute("aria-current", "page");
+        if (galleryThumbs) {
+          const left = button.offsetLeft - (galleryThumbs.clientWidth - button.clientWidth) / 2;
+          galleryThumbs.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+        }
+      } else {
+        button.removeAttribute("aria-current");
+      }
     });
   }
 
-  renderPage(0, { scroll: false });
+  loadCameraViews().finally(() => {
+    thumbButtons = createGalleryThumbnailControls();
+    renderPage(INITIAL_PAGE, { scroll: false });
+  });
 }
