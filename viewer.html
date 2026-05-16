@@ -13,42 +13,42 @@
 
   gtag('config', 'G-TSQGH8Q0WV');
 </script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 <style>
-:root { color-scheme: dark; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; background: #050608; color: #eee;
+html, body { height: 100%; background: #ffffff; color: #222;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow: hidden; }
 #viewer { position: fixed; inset: 0; }
-canvas { display: block; width: 100%; height: 100%; }
+model-viewer { width: 100%; height: 100%; background: #ffffff; --poster-color: #ffffff; }
 header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 10;
   display: flex; align-items: center; gap: 14px;
   padding: 12px 18px;
-  background: linear-gradient(180deg, rgba(0,0,0,.7), rgba(0,0,0,0));
+  background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,0));
   pointer-events: none;
 }
 header > * { pointer-events: auto; }
 .back {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 12px;
-  background: rgba(20,20,22,.78);
-  color: #fff; text-decoration: none;
-  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.92);
+  color: #222; text-decoration: none;
+  border: 1px solid rgba(0,0,0,.12);
   border-radius: 6px;
   font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   backdrop-filter: blur(6px);
   transition: background .12s;
 }
-.back:hover { background: rgba(40,40,44,.92); }
+.back:hover { background: rgba(240,240,242,.96); }
 .scene-name {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 13px;
-  color: rgba(255,255,255,.85);
-  background: rgba(20,20,22,.55);
+  color: rgba(0,0,0,.7);
+  background: rgba(255,255,255,.7);
   padding: 6px 12px;
   border-radius: 6px;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(0,0,0,.08);
   backdrop-filter: blur(6px);
 }
 .tag {
@@ -58,7 +58,7 @@ header > * { pointer-events: auto; }
   letter-spacing: .12em;
   text-transform: uppercase;
   color: #fff;
-  background: rgba(184,51,106,.78);
+  background: rgba(184,51,106,.85);
   padding: 4px 10px;
   border-radius: 6px;
 }
@@ -67,71 +67,42 @@ header > * { pointer-events: auto; }
   z-index: 10;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 12px;
-  color: rgba(255,255,255,.72);
-  background: rgba(20,20,22,.78);
+  color: rgba(0,0,0,.7);
+  background: rgba(255,255,255,.85);
   padding: 8px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.12);
+  border: 1px solid rgba(0,0,0,.1);
   backdrop-filter: blur(8px);
   min-width: 220px;
   text-align: center;
+  display: none;
 }
-#hud.warn { color: #ff8085; border-color: rgba(255,107,107,.4); }
-.kbd {
-  display: inline-block;
-  background: rgba(255,255,255,.12);
-  padding: 1px 6px;
-  border-radius: 3px;
-  font-size: 10.5px;
-  margin: 0 1px;
-}
-#hint { position: fixed; right: 16px; bottom: 16px; z-index: 10;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 11px;
-  color: rgba(255,255,255,.55);
-  background: rgba(20,20,22,.5);
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,.08);
-  backdrop-filter: blur(6px);
-  text-align: right;
-  line-height: 1.6;
-}
+#hud.warn { color: #c0392b; border-color: rgba(192,57,43,.35); display: block; }
 </style>
-
-<!-- importmap polyfill for Safari/iOS < 16.4 (importmap is native from 16.4).
-     Loaded synchronously so it's installed before the module script runs. -->
-<script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" crossorigin="anonymous"></script>
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
 </head>
 <body>
 
 <header>
   <a href="index.html#gallery" class="back">‹ back to gallery</a>
-  <span class="scene-name" id="sceneName">…</span>
   <span class="tag">Full point cloud</span>
 </header>
 
-<div id="viewer"><canvas id="canvas"></canvas></div>
-
-<div id="hud">Loading…</div>
-<div id="hint">
-  drag = orbit · scroll = zoom · right-drag = pan<br>
-  <span class="kbd">R</span> reset · <span class="kbd">L</span> toggle trajectory
+<div id="viewer">
+  <model-viewer id="QualitativeResult"
+                alt="3D Model"
+                loading="eager"
+                touch-action="pan-y" environment-image="legacy"
+                camera-orbit="180deg 70deg auto"
+                zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 1m"
+                max-camera-orbit="auto auto 10m" interaction-prompt="none" shadow-intensity="0" ar
+                disable-shadow ar-modes="webxr scene-viewer quick-look"
+                style="width: 100%; height: 100%; background: #ffffff;">
+  </model-viewer>
 </div>
 
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+<div id="hud">Loading…</div>
 
+<script>
 // ---- resolve which GLB to load --------------------------------------------
 const params = new URLSearchParams(location.search);
 const name = params.get('name') || '';
@@ -148,171 +119,19 @@ const glbFile = (GLB_NAME_OVERRIDES[name] || name) + ".glb";
 const url = params.get('url')
   || "https://huggingface.co/datasets/silentchen/vggt-omega-glbs-full/resolve/main/" + glbFile + "?clean1";
 
-const sceneName = document.getElementById('sceneName');
 const hud = document.getElementById('hud');
-sceneName.textContent = name || '(no name?)';
+const mv = document.getElementById('QualitativeResult');
 
 if (!name) {
   hud.textContent = "Missing ?name=… in URL";
   hud.classList.add('warn');
+} else {
+  mv.setAttribute('src', url);
+  mv.addEventListener('error', () => {
+    hud.textContent = "Failed to load " + glbFile;
+    hud.classList.add('warn');
+  });
 }
-
-// ---- scene setup ----------------------------------------------------------
-const canvas = document.getElementById('canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x05060a);
-
-const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 5000);
-camera.position.set(2, 1.2, 3);
-
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-
-scene.add(new THREE.AmbientLight(0xffffff, 1.6));
-const d1 = new THREE.DirectionalLight(0xffffff, 1.6); d1.position.set(5,8,5);   scene.add(d1);
-const d2 = new THREE.DirectionalLight(0xffffff, 0.9); d2.position.set(-3,4,-5); scene.add(d2);
-
-let model = null;
-let camsGroup = null;
-let showCams = true;
-let savedCam = null;
-
-// ---- camera trajectory viz -----------------------------------------------
-function buildCamsViz(extras) {
-  const flat = extras?.cam_from_worlds || [];
-  const N = extras?.frame_count || 0;
-  if (!flat.length || !N) return null;
-  const positions = new Float32Array(N * 3);
-  const colors    = new Float32Array(N * 3);
-  const M = new THREE.Matrix4();
-  const P = new THREE.Vector3();
-  const C = new THREE.Color();
-  for (let i = 0; i < N; i++) {
-    const o = i * 16;
-    M.set(flat[o+0],  flat[o+1],  flat[o+2],  flat[o+3],
-          flat[o+4],  flat[o+5],  flat[o+6],  flat[o+7],
-          flat[o+8],  flat[o+9],  flat[o+10], flat[o+11],
-          flat[o+12], flat[o+13], flat[o+14], flat[o+15]).invert();
-    P.setFromMatrixPosition(M);
-    positions[i*3]   = P.x;
-    positions[i*3+1] = P.y;
-    positions[i*3+2] = P.z;
-    C.setHSL((i / Math.max(N - 1, 1)) * 0.83, 1.0, 0.55);
-    colors[i*3]   = C.r;
-    colors[i*3+1] = C.g;
-    colors[i*3+2] = C.b;
-  }
-  const geom = new THREE.BufferGeometry();
-  geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geom.setAttribute('color',    new THREE.Float32BufferAttribute(colors, 3));
-  const dots = new THREE.Points(geom, new THREE.PointsMaterial({
-    size: 8, sizeAttenuation: false, vertexColors: true,
-    transparent: true, depthTest: false, depthWrite: false,
-  }));
-  dots.renderOrder = 999;
-  const line = new THREE.Line(geom, new THREE.LineBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.55,
-    depthTest: false, depthWrite: false,
-  }));
-  line.renderOrder = 998;
-  const g = new THREE.Group();
-  g.add(dots); g.add(line);
-  return g;
-}
-
-// ---- load -----------------------------------------------------------------
-const loader = new GLTFLoader();
-const t0 = performance.now();
-let lastFetchedMB = 0;
-if (name) {
-  hud.textContent = "Loading…";
-  loader.load(url,
-    (gltf) => {
-      model = gltf.scene;
-      scene.add(model);
-
-      const box = new THREE.Box3().setFromObject(model);
-      const sz  = box.getSize(new THREE.Vector3());
-      const ctr = box.getCenter(new THREE.Vector3());
-      model.position.sub(ctr);
-
-      const extras = gltf.parser?.json?.extras || {};
-      camsGroup = buildCamsViz(extras);
-      if (camsGroup) model.add(camsGroup);
-
-      const maxDim = Math.max(sz.x, sz.y, sz.z) || 1;
-      const dist = maxDim / (2 * Math.tan(camera.fov * Math.PI / 360)) * 1.6;
-      camera.position.set(dist * 0.55, dist * 0.35, dist);
-      camera.near = dist / 200;
-      camera.far  = dist * 100;
-      camera.updateProjectionMatrix();
-      controls.target.set(0, 0, 0);
-      controls.update();
-
-      savedCam = {
-        pos: camera.position.clone(),
-        tgt: controls.target.clone(),
-      };
-
-      // count rendered points for the HUD
-      let n = 0;
-      model.traverse(c => {
-        if (c.isPoints && c.geometry?.attributes?.position) {
-          n += c.geometry.attributes.position.count;
-        }
-      });
-      const t = ((performance.now() - t0) / 1000).toFixed(1);
-      hud.textContent = `${(n/1e6).toFixed(2)} M points · ${lastFetchedMB.toFixed(0)} MB · ${t}s`;
-    },
-    (p) => {
-      lastFetchedMB = p.loaded / 1e6;
-      hud.textContent = p.total
-        ? `Loading… ${Math.round(p.loaded / p.total * 100)}%`
-        : `Loading… ${lastFetchedMB.toFixed(0)} MB`;
-    },
-    (err) => {
-      console.warn(err);
-      hud.textContent = "Failed to load " + glbFile;
-      hud.classList.add('warn');
-    }
-  );
-}
-
-// ---- input ---------------------------------------------------------------
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'r' || e.key === 'R') {
-    if (savedCam) {
-      camera.position.copy(savedCam.pos);
-      controls.target.copy(savedCam.tgt);
-      controls.update();
-    }
-  } else if (e.key === 'l' || e.key === 'L') {
-    if (camsGroup) {
-      showCams = !showCams;
-      camsGroup.visible = showCams;
-    }
-  }
-});
-
-// ---- render loop ---------------------------------------------------------
-function tick() {
-  requestAnimationFrame(tick);
-  controls.update();
-  const r = canvas.getBoundingClientRect();
-  const w = Math.floor(r.width), h = Math.floor(r.height);
-  if (canvas.width !== w || canvas.height !== h) {
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  }
-  renderer.render(scene, camera);
-}
-tick();
 </script>
 </body>
 </html>

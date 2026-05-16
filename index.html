@@ -37,18 +37,7 @@
   <script src="./static/js/bulma-carousel.min.js"></script>
   <script src="./static/js/bulma-slider.min.js"></script>
 
-  <!-- importmap polyfill for Safari/iOS < 16.4 (native importmap landed in
-       Safari 16.4 / March 2023). The shim no-ops where importmap is native.
-       Loaded synchronously so it's installed before gallery.js evaluates. -->
-  <script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" crossorigin="anonymous"></script>
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-    }
-  }
-  </script>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 </head>
 <body>
 
@@ -448,6 +437,6 @@
   setDemo(0);
 })();
 </script>
-<script type="module" src="./gallery.js?v=clean10"></script>
+<script type="module" src="./gallery.js?v=mv3"></script>
 </body>
 </html>
