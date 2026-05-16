@@ -263,11 +263,15 @@
       input: './assets/demos/transmission_video.mp4',
       recon: './assets/demos/transmission_v1.mp4',
       credit: 'transmission@parhoman',
+      inputPlaybackRate: 1.5,
+      reconPlaybackRate: 1.55,
     },
     {
       input: './assets/demos/fight_video.mp4',
       recon: './assets/demos/fight_v1.mp4',
       credit: '',
+      inputPlaybackRate: 1,
+      reconPlaybackRate: 0.95,
     },
   ];
   const inputVideo = document.getElementById('demoInputVideo');
@@ -288,6 +292,12 @@
     if (!video) return;
     const p = video.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
+  }
+
+  function setPlaybackRate(video, rate) {
+    if (!video) return;
+    video.defaultPlaybackRate = rate;
+    video.playbackRate = rate;
   }
 
   function playPairFromStart() {
@@ -321,6 +331,8 @@
     clearReplayTimer();
     setVideoSource(inputVideo, demo.input);
     setVideoSource(reconVideo, demo.recon);
+    setPlaybackRate(inputVideo, demo.inputPlaybackRate || 1);
+    setPlaybackRate(reconVideo, demo.reconPlaybackRate || 1);
     if (creditEl) {
       creditEl.textContent = demo.credit || '';
       creditEl.style.display = demo.credit ? '' : 'none';
