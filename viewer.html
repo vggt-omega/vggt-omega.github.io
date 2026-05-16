@@ -92,7 +92,7 @@ header > * { pointer-events: auto; }
                 alt="3D Model"
                 loading="eager"
                 touch-action="pan-y" environment-image="legacy"
-                camera-orbit="180deg 70deg auto"
+                camera-orbit="-0.082163rad 0.808258rad auto"
                 zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 1m"
                 max-camera-orbit="auto auto 10m" interaction-prompt="none" shadow-intensity="0" ar
                 disable-shadow ar-modes="webxr scene-viewer quick-look"
@@ -121,12 +121,24 @@ const url = params.get('url')
 
 const hud = document.getElementById('hud');
 const mv = document.getElementById('QualitativeResult');
+const INITIAL_CAMERA = {
+  theta: -0.082163,
+  phi: 0.808258,
+  radiusScale: 1.057403,
+};
 
 if (!name) {
   hud.textContent = "Missing ?name=… in URL";
   hud.classList.add('warn');
 } else {
   mv.setAttribute('src', url);
+  mv.addEventListener('load', () => {
+    try {
+      const o = mv.getCameraOrbit();
+      mv.cameraOrbit = `${INITIAL_CAMERA.theta}rad ${INITIAL_CAMERA.phi}rad ${o.radius * INITIAL_CAMERA.radiusScale}m`;
+      mv.jumpCameraToGoal();
+    } catch (_) {}
+  });
   mv.addEventListener('error', () => {
     hud.textContent = "Failed to load " + glbFile;
     hud.classList.add('warn');

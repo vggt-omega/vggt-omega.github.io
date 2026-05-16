@@ -57,6 +57,11 @@ const GLB_NAME_OVERRIDES = {
 };
 const GLB_VER = "clean1";
 function glbPath1M(name) { return GLB_1M_DIR + (GLB_NAME_OVERRIDES[name] || name) + ".glb?" + GLB_VER; }
+const INITIAL_CAMERA = {
+  theta: -0.082163,
+  phi: 0.808258,
+  radiusScale: 1.057403,
+};
 
 const grid       = document.getElementById("galleryGrid");
 const pagerPages = document.getElementById("pagerPages");
@@ -144,7 +149,7 @@ if (grid) {
     mv.setAttribute("loading", "eager");
     mv.setAttribute("touch-action", "pan-y");
     mv.setAttribute("environment-image", "legacy");
-    mv.setAttribute("camera-orbit", "180deg 70deg auto");
+    mv.setAttribute("camera-orbit", `${INITIAL_CAMERA.theta}rad ${INITIAL_CAMERA.phi}rad auto`);
     mv.setAttribute("zoom-sensitivity", "0.2");
     mv.setAttribute("camera-controls", "");
     mv.setAttribute("disable-tap", "");
@@ -167,7 +172,7 @@ if (grid) {
       // Bring the camera in tighter than model-viewer's auto-framing.
       try {
         const o = mv.getCameraOrbit();
-        mv.cameraOrbit = `${o.theta}rad ${o.phi}rad ${o.radius * 0.65}m`;
+        mv.cameraOrbit = `${INITIAL_CAMERA.theta}rad ${INITIAL_CAMERA.phi}rad ${o.radius * INITIAL_CAMERA.radiusScale}m`;
         mv.jumpCameraToGoal();
       } catch (_) {}
     });
