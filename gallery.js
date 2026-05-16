@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// 13 top-rated entries (3 per page → 5 pages).
+// 12 top-rated entries (3 per page → 4 pages).
 const NAMES = [
   "16539923_uhd_fps4",
   "znz_20260430_11_fps3",
@@ -20,7 +20,6 @@ const NAMES = [
   "dyz_20260430_15",
   "loop_closure__temple_castle__31996068_fps4",
   "dyz_20260430_19_fps3",
-  "lIjGmjqyiZk_0046950_0048750_seg0-1025",
   "DjaOuqgRWGQ_0041828_0043628_seg0-1025_hstack",
   "lIjGmjqyiZk_0102750_0104550_seg0-1025",
   "wwm_20260430_11_fps4",
