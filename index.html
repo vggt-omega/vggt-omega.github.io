@@ -128,27 +128,32 @@
      DEMO TEASER
 ============================================================ -->
 <section class="section vggto-demo-teaser">
-  <div class="container is-max-widescreen">
-    <div class="demo-teaser-grid">
-      <figure class="demo-teaser-panel">
-        <video id="demoInputVideo" muted playsinline preload="auto" poster="./assets/demos/transmission_video_poster.jpg">
-          <source src="./assets/demos/transmission_video.mp4" type="video/mp4">
-        </video>
-        <figcaption>
-          <span>Input Video</span>
-          <span class="demo-teaser-credit">transmission@parhoman</span>
-        </figcaption>
-      </figure>
-      <figure class="demo-teaser-panel">
-        <video id="demoReconVideo" muted playsinline preload="auto" poster="./assets/demos/transmission_v1_poster.jpg">
-          <source src="./assets/demos/transmission_v1.mp4" type="video/mp4">
-        </video>
-        <figcaption>Reconstruction</figcaption>
-      </figure>
+  <div class="container is-max-widescreen demo-teaser-container">
+    <div class="demo-teaser-stage">
+      <button type="button" class="demo-teaser-arrow demo-teaser-arrow-prev" data-demo-step="-1" aria-label="Previous demo">‹</button>
+      <div class="demo-teaser-grid">
+        <figure class="demo-teaser-panel">
+          <video id="demoInputVideo" muted playsinline preload="auto" poster="./assets/demos/transmission_video_poster.jpg">
+            <source src="./assets/demos/transmission_video.mp4" type="video/mp4">
+          </video>
+          <figcaption>
+            <span>Input Video</span>
+            <span class="demo-teaser-credit">transmission@parhoman</span>
+          </figcaption>
+        </figure>
+        <figure class="demo-teaser-panel">
+          <video id="demoReconVideo" muted playsinline preload="auto" poster="./assets/demos/transmission_v1_poster.jpg">
+            <source src="./assets/demos/transmission_v1.mp4" type="video/mp4">
+          </video>
+          <figcaption>Reconstruction</figcaption>
+        </figure>
+      </div>
+      <button type="button" class="demo-teaser-arrow demo-teaser-arrow-next" data-demo-step="1" aria-label="Next demo">›</button>
     </div>
-    <div class="demo-teaser-controls" aria-label="Demo selector">
-      <button type="button" class="demo-teaser-btn active" data-demo-index="0" aria-label="Show demo 1" aria-pressed="true">1</button>
-      <button type="button" class="demo-teaser-btn" data-demo-index="1" aria-label="Show demo 2" aria-pressed="false">2</button>
+    <div class="demo-teaser-status" aria-label="Demo selector">
+      <button type="button" class="demo-teaser-dot active" data-demo-index="0" aria-label="Show transmission demo" aria-pressed="true"></button>
+      <span class="demo-teaser-current" id="demoTeaserLabel" aria-live="polite">Transmission</span>
+      <button type="button" class="demo-teaser-dot" data-demo-index="1" aria-label="Show fight demo" aria-pressed="false"></button>
     </div>
   </div>
 </section>
@@ -260,6 +265,7 @@
 (() => {
   const demos = [
     {
+      label: 'Transmission',
       input: './assets/demos/transmission_video.mp4',
       recon: './assets/demos/transmission_v1.mp4',
       inputPoster: './assets/demos/transmission_video_poster.jpg',
@@ -269,6 +275,7 @@
       reconPlaybackRate: 1.55,
     },
     {
+      label: 'Fight',
       input: './assets/demos/fight_video.mp4',
       recon: './assets/demos/fight_v1.mp4',
       inputPoster: './assets/demos/fight_video_poster.jpg',
@@ -282,10 +289,13 @@
   const reconVideo = document.getElementById('demoReconVideo');
   const creditEl = document.querySelector('.demo-teaser-credit');
   const videos = [inputVideo, reconVideo].filter(Boolean);
-  const buttons = Array.from(document.querySelectorAll('[data-demo-index]'));
+  const indexButtons = Array.from(document.querySelectorAll('[data-demo-index]'));
+  const stepButtons = Array.from(document.querySelectorAll('[data-demo-step]'));
+  const demoLabelEl = document.getElementById('demoTeaserLabel');
   const endedVideos = new Set();
   let replayTimer = null;
   let demoLoadToken = 0;
+  let currentDemoIndex = 0;
 
   function clearReplayTimer() {
     if (!replayTimer) return;
@@ -349,8 +359,10 @@
   }
 
   function setDemo(index) {
+    index = (index + demos.length) % demos.length;
     const demo = demos[index];
     if (!demo) return;
+    currentDemoIndex = index;
     const loadToken = ++demoLoadToken;
     clearReplayTimer();
     videos.forEach((video) => video.pause());
@@ -364,7 +376,8 @@
       creditEl.textContent = demo.credit || '';
       creditEl.style.display = demo.credit ? '' : 'none';
     }
-    buttons.forEach((button) => {
+    if (demoLabelEl) demoLabelEl.textContent = demo.label || `Demo ${index + 1}`;
+    indexButtons.forEach((button) => {
       const active = Number(button.dataset.demoIndex) === index;
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
@@ -384,8 +397,13 @@
     });
   });
 
-  buttons.forEach((button) => {
+  indexButtons.forEach((button) => {
     button.addEventListener('click', () => setDemo(Number(button.dataset.demoIndex)));
+  });
+  stepButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      setDemo(currentDemoIndex + Number(button.dataset.demoStep || 0));
+    });
   });
   setDemo(0);
 })();
