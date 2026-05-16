@@ -141,7 +141,7 @@
           </figcaption>
         </figure>
         <figure class="demo-teaser-panel">
-          <video id="demoReconVideo" muted playsinline autoplay preload="auto" poster="./assets/demos/transmission_v1_poster.jpg">
+          <video id="demoReconVideo" class="demo-recon-twitter-grade" muted playsinline autoplay preload="auto" poster="./assets/demos/transmission_v1_poster.jpg">
             <source src="./assets/demos/transmission_v1.mp4" type="video/mp4">
           </video>
           <figcaption>Reconstruction</figcaption>
@@ -415,6 +415,9 @@
     setVideoSource(reconVideo, demo.recon);
     setPlaybackRate(inputVideo, demo.inputPlaybackRate || 1);
     setPlaybackRate(reconVideo, demo.reconPlaybackRate || 1);
+    if (reconVideo) {
+      reconVideo.classList.toggle('demo-recon-twitter-grade', index === 0);
+    }
     if (creditEl) {
       creditEl.textContent = demo.credit || '';
       creditEl.style.display = demo.credit ? '' : 'none';

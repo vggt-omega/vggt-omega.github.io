@@ -77,6 +77,9 @@
   background: #f5f5f5;
   display: block;
 }
+#demoReconVideo.demo-recon-twitter-grade {
+  filter: contrast(0.94) brightness(1.08) saturate(1.1);
+}
 .demo-teaser-panel figcaption {
   position: absolute;
   left: 10px;
