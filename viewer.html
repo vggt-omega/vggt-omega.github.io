@@ -14,9 +14,9 @@
   gtag('config', 'G-TSQGH8Q0WV');
 </script>
 <style>
-:root { color-scheme: dark; }
+:root { color-scheme: light; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; background: #050608; color: #eee;
+html, body { height: 100%; background: #fff; color: #16181c;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow: hidden; }
 #viewer { position: fixed; inset: 0; }
 canvas { display: block; width: 100%; height: 100%; }
@@ -24,75 +24,60 @@ header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 10;
   display: flex; align-items: center; gap: 14px;
   padding: 12px 18px;
-  background: linear-gradient(180deg, rgba(0,0,0,.7), rgba(0,0,0,0));
+  background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,0));
   pointer-events: none;
 }
 header > * { pointer-events: auto; }
 .back {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 12px;
-  background: rgba(20,20,22,.78);
-  color: #fff; text-decoration: none;
-  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.82);
+  color: #16181c; text-decoration: none;
+  border: 1px solid rgba(0,0,0,.14);
   border-radius: 6px;
   font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   backdrop-filter: blur(6px);
   transition: background .12s;
 }
-.back:hover { background: rgba(40,40,44,.92); }
-.scene-name {
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 13px;
-  color: rgba(255,255,255,.85);
-  background: rgba(20,20,22,.55);
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,.08);
-  backdrop-filter: blur(6px);
-}
-.tag {
-  margin-left: auto;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 10.5px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: #fff;
-  background: rgba(184,51,106,.78);
-  padding: 4px 10px;
-  border-radius: 6px;
-}
+.back:hover { background: rgba(255,255,255,.96); }
 #hud {
   position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
   z-index: 10;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 12px;
-  color: rgba(255,255,255,.72);
-  background: rgba(20,20,22,.78);
+  color: rgba(0,0,0,.68);
+  background: rgba(255,255,255,.84);
   padding: 8px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.12);
+  border: 1px solid rgba(0,0,0,.12);
   backdrop-filter: blur(8px);
   min-width: 220px;
   text-align: center;
 }
 #hud.warn { color: #ff8085; border-color: rgba(255,107,107,.4); }
+#hud.loading {
+  top: 50%;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+}
 .kbd {
   display: inline-block;
-  background: rgba(255,255,255,.12);
+  background: rgba(0,0,0,.08);
   padding: 1px 6px;
   border-radius: 3px;
-  font-size: 10.5px;
+  font-size: 15.75px;
   margin: 0 1px;
 }
 #hint { position: fixed; right: 16px; bottom: 16px; z-index: 10;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 11px;
-  color: rgba(255,255,255,.55);
-  background: rgba(20,20,22,.5);
+  font-size: 16.5px;
+  color: rgba(0,0,0,.52);
+  background: rgba(255,255,255,.74);
   padding: 6px 10px;
   border-radius: 6px;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(0,0,0,.1);
   backdrop-filter: blur(6px);
   text-align: right;
   line-height: 1.6;
@@ -114,14 +99,12 @@ header > * { pointer-events: auto; }
 <body>
 
 <header>
-  <a href="index.html#gallery" class="back">‹ back to gallery</a>
-  <span class="scene-name" id="sceneName">…</span>
-  <span class="tag">Full point cloud</span>
+  <a href="index.html#gallery" class="back">‹ back to project page</a>
 </header>
 
 <div id="viewer"><canvas id="canvas"></canvas></div>
 
-<div id="hud">Loading…</div>
+<div id="hud" class="loading">Loading…</div>
 <div id="hint">
   drag = orbit · scroll = zoom · right-drag = pan<br>
   <span class="kbd">R</span> reset · <span class="kbd">L</span> toggle trajectory
@@ -148,9 +131,7 @@ const glbFile = (GLB_NAME_OVERRIDES[name] || name) + ".glb";
 const url = params.get('url')
   || "https://huggingface.co/datasets/silentchen/vggt-omega-glbs-full/resolve/main/" + glbFile + "?clean1";
 
-const sceneName = document.getElementById('sceneName');
 const hud = document.getElementById('hud');
-sceneName.textContent = name || '(no name?)';
 
 if (!name) {
   hud.textContent = "Missing ?name=… in URL";
@@ -164,7 +145,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x05060a);
+scene.background = new THREE.Color(0xffffff);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 5000);
 camera.position.set(2, 1.2, 3);
@@ -267,6 +248,7 @@ if (name) {
         }
       });
       const t = ((performance.now() - t0) / 1000).toFixed(1);
+      hud.classList.remove('loading');
       hud.textContent = `${(n/1e6).toFixed(2)} M points · ${lastFetchedMB.toFixed(0)} MB · ${t}s`;
     },
     (p) => {
@@ -277,6 +259,7 @@ if (name) {
     },
     (err) => {
       console.warn(err);
+      hud.classList.remove('loading');
       hud.textContent = "Failed to load " + glbFile;
       hud.classList.add('warn');
     }
