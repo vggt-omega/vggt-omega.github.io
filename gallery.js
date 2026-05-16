@@ -9,7 +9,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// 12 top-rated entries (3 per page → 4 pages).
+// 12 top-rated entries. Wide composites are paginated 3 per page; the
+// ~square / portrait clips listed in PORTRAIT_NAMES get their own page.
 const NAMES = [
   "16539923_uhd_fps4",
   "znz_20260430_11_fps3",
@@ -35,7 +36,22 @@ const PAGE_SIZE = 3;
 // Videos whose composite is narrow / portrait — detect via aspect ratio after
 // loadedmetadata and add .portrait to the row for a different grid layout.
 const NARROW_THRESHOLD = 2.0;  // width/height < this → portrait row
-const TOTAL_PAGES = Math.ceil(NAMES.length / PAGE_SIZE);
+// Clips that are NOT the wide side-by-side composite (≈square / portrait,
+// width/height < NARROW_THRESHOLD). They break the wide-row layout, so they
+// are pulled out and shown together on their own dedicated page.
+const PORTRAIT_NAMES = new Set([
+  "wwm_20260430_11_fps4",
+]);
+const LANDSCAPE = NAMES.filter((n) => !PORTRAIT_NAMES.has(n));
+const PORTRAIT  = NAMES.filter((n) =>  PORTRAIT_NAMES.has(n));
+// Page model: wide composites in PAGE_SIZE-chunks, then one page that holds
+// all portrait clips (only added if there are any).
+const PAGES = [];
+for (let i = 0; i < LANDSCAPE.length; i += PAGE_SIZE) {
+  PAGES.push(LANDSCAPE.slice(i, i + PAGE_SIZE));
+}
+if (PORTRAIT.length) PAGES.push(PORTRAIT.slice());
+const TOTAL_PAGES = Math.max(1, PAGES.length);
 // Downsampled GLBs (~1M points each, ~17 MB) — committed in the repo.
 const GLB_1M_DIR   = "./assets/glb/";
 // Full-resolution GLBs (3-13M points, 60-470 MB each) — hosted on Hugging Face.
@@ -265,10 +281,14 @@ if (grid) {
   tick();
 
   // ---- row factory ----------------------------------------------------
-  function makeRow(name, globalIndex) {
+  function makeRow(name, globalIndex, isPortrait) {
     const row = document.createElement("article");
     row.className = "row";
     row.dataset.name = name;
+    // Portrait clips live on their own page: tag the row up front so the
+    // layout is correct before video metadata loads (which then refines the
+    // exact aspect ratio in the loadedmetadata handler below).
+    if (isPortrait) row.classList.add("portrait");
 
     const panels = document.createElement("div");
     panels.className = "row-panels";
@@ -279,6 +299,9 @@ if (grid) {
     // the default video UI.
     const vPanel = document.createElement("div");
     vPanel.className = "row-video";
+    // Sensible square default for portrait clips so they render correctly
+    // even before loadedmetadata overrides .row-video's wide aspect ratio.
+    if (isPortrait) vPanel.style.aspectRatio = "1 / 1";
     const v = document.createElement("video");
     v.muted = true;
     v.loop = true;
@@ -415,11 +438,10 @@ if (grid) {
     }
     grid.innerHTML = "";
 
-    const start = page * PAGE_SIZE;
-    const end   = Math.min(start + PAGE_SIZE, NAMES.length);
-    for (let i = start; i < end; i++) {
-      grid.appendChild(makeRow(NAMES[i], i));
-    }
+    const items = PAGES[page] || [];
+    items.forEach((name, i) => {
+      grid.appendChild(makeRow(name, i, PORTRAIT_NAMES.has(name)));
+    });
     renderPager();
 
     if (opts && opts.scroll) {
