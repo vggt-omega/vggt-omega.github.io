@@ -250,6 +250,7 @@
     {
       label: 'Transmission',
       input: './assets/demos/transmission_video.mp4',
+      thumb: './assets/demos/thumbs/transmission_video_thumb.mp4',
       recon: './assets/demos/transmission_v1.mp4',
       inputPoster: './assets/demos/transmission_video_poster.jpg',
       reconPoster: './assets/demos/transmission_v1_poster.jpg',
@@ -260,6 +261,7 @@
     {
       label: 'Fight',
       input: './assets/demos/fight_video.mp4',
+      thumb: './assets/demos/thumbs/fight_video_thumb.mp4',
       recon: './assets/demos/fight_v1.mp4',
       inputPoster: './assets/demos/fight_video_poster.jpg',
       reconPoster: './assets/demos/fight_v1_poster.jpg',
@@ -270,6 +272,8 @@
     {
       label: 'Wingsuit',
       input: './assets/demos/wingsuit.mp4',
+      thumb: './assets/demos/thumbs/wingsuit_thumb.mp4',
+      thumbPoster: './assets/demos/thumbs/wingsuit_thumb_poster.jpg',
       recon: './assets/demos/wingsuit_v2.mp4',
       reconPoster: './assets/demos/wingsuit_v2_poster.jpg',
       credit: '',
@@ -299,21 +303,38 @@
 
       const thumb = document.createElement('video');
       thumb.muted = true;
+      thumb.defaultMuted = true;
       thumb.playsInline = true;
-      thumb.preload = 'metadata';
-      thumb.src = demo.input;
+      thumb.preload = 'none';
       thumb.tabIndex = -1;
       thumb.setAttribute('aria-hidden', 'true');
-      if (demo.inputPoster) thumb.poster = demo.inputPoster;
-      if (!demo.inputPoster) {
-        thumb.addEventListener('loadedmetadata', () => {
-          try { thumb.currentTime = 0.1; } catch (_) {}
-        }, { once: true });
+      thumb.setAttribute('muted', '');
+      thumb.setAttribute('playsinline', '');
+      thumb.setAttribute('webkit-playsinline', '');
+      if (demo.thumbPoster || demo.inputPoster) {
+        thumb.poster = demo.thumbPoster || demo.inputPoster;
+      }
+
+      function loadThumb() {
+        if (thumb.src) return;
+        thumb.src = demo.thumb || demo.input;
+        thumb.load();
+        if (!demo.inputPoster) {
+          thumb.addEventListener('loadedmetadata', () => {
+            try { thumb.currentTime = 0.1; } catch (_) {}
+          }, { once: true });
+        }
       }
 
       button.appendChild(thumb);
-      button.addEventListener('mouseenter', () => playVideo(thumb));
-      button.addEventListener('focus', () => playVideo(thumb));
+      button.addEventListener('mouseenter', () => {
+        loadThumb();
+        playVideo(thumb);
+      });
+      button.addEventListener('focus', () => {
+        loadThumb();
+        playVideo(thumb);
+      });
       button.addEventListener('mouseleave', () => {
         thumb.pause();
         try { thumb.currentTime = demo.inputPoster ? 0 : 0.1; } catch (_) {}
@@ -333,8 +354,21 @@
     replayTimer = null;
   }
 
+  function prepareAutoplayVideo(video) {
+    if (!video) return;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('autoplay', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+  }
+
   function playVideo(video) {
     if (!video) return;
+    prepareAutoplayVideo(video);
     const p = video.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
   }
@@ -423,6 +457,7 @@
   }
 
   videos.forEach((video) => {
+    prepareAutoplayVideo(video);
     video.loop = false;
     video.addEventListener('ended', () => {
       endedVideos.add(video);

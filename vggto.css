@@ -89,10 +89,9 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: "Google Sans", "Noto Sans", sans-serif;
   font-size: 9px;
   letter-spacing: .08em;
-  text-transform: uppercase;
   color: #fff;
   background: rgba(20,20,22,.62);
   padding: 2px 7px;
@@ -384,7 +383,7 @@ figure.image figcaption {
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: "Google Sans", "Noto Sans", sans-serif;
   font-size: 11px;
   background: rgba(20,20,22,.78);
   color: #fff;
