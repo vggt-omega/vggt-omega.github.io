@@ -333,10 +333,9 @@ figure.image figcaption {
   width: 100%;
   aspect-ratio: 16 / 9;
   position: relative;
-  background: #ffffff;
+  background: #f5f5f5;
   overflow: hidden;
-  border-radius: 15px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
   cursor: grab;
 }
 .row-viewer:active { cursor: grabbing; }
@@ -346,14 +345,6 @@ figure.image figcaption {
   width: 100%;
   height: 100%;
   display: block;
-}
-.viewer-mv {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: #ffffff;
-  --poster-color: #ffffff;
 }
 .viewer-status {
   position: absolute;

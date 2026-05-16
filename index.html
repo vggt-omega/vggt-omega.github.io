@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="stylesheet" href="./vggto.css?v=mobile-viewer-height">
+  <link rel="stylesheet" href="./vggto.css?v=three-trajectory">
   <link rel="icon" type="image/svg+xml" href="./assets/img/favicon.svg">
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -37,7 +37,18 @@
   <script src="./static/js/bulma-carousel.min.js"></script>
   <script src="./static/js/bulma-slider.min.js"></script>
 
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+  <!-- importmap polyfill for Safari/iOS < 16.4 (native importmap landed in
+       Safari 16.4 / March 2023). The shim no-ops where importmap is native.
+       Loaded synchronously so it's installed before gallery.js evaluates. -->
+  <script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" crossorigin="anonymous"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
 
@@ -186,11 +197,11 @@
 </section>
 
 <!-- ============================================================
-     GALLERY
+     POINT-OF-VIEW EXAMPLES
 ============================================================ -->
 <section class="section">
   <div class="container is-max-widescreen">
-    <h2 class="title is-3 has-text-centered">Gallery</h2>
+    <h2 class="title is-3 has-text-centered">Point-of-View Examples</h2>
     <div class="content has-text-justified">
       <p>
         Reconstructions across static landmarks, dynamic action, aerial / FPV
@@ -206,13 +217,13 @@
       <!-- rows injected by gallery.js -->
     </div>
 
-    <nav class="pager" id="galleryPager" aria-label="Gallery pagination">
+    <nav class="pager" id="galleryPager" aria-label="Point-of-view examples pagination">
       <button type="button" class="pager-btn" data-pager="prev" aria-label="Previous page">‹ Prev</button>
       <div class="pager-pages" id="pagerPages" role="group" aria-label="Pages"></div>
       <button type="button" class="pager-btn" data-pager="next" aria-label="Next page">Next ›</button>
     </nav>
 
-    <noscript><p>Enable JavaScript to load the gallery.</p></noscript>
+    <noscript><p>Enable JavaScript to load the examples.</p></noscript>
   </div>
 </section>
 
@@ -474,6 +485,6 @@
   setDemo(0);
 })();
 </script>
-<script type="module" src="./gallery.js?v=cam3"></script>
+<script type="module" src="./gallery.js?v=three-trajectory"></script>
 </body>
 </html>
