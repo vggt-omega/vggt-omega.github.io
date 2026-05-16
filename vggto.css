@@ -247,6 +247,10 @@ figure.image figcaption {
   display: block;
 }
 .row.portrait .row-panels {
+  /* Needs an explicit width: as a column-flex item, the auto side margins
+     (used to centre the narrower portrait card) cancel align-items:stretch,
+     so without this the panel shrink-wraps to 0 and the video disappears. */
+  width: 100%;
   max-width: 720px;
   margin-left: auto;
   margin-right: auto;
