@@ -103,10 +103,12 @@ if (grid) {
     v.dataset.fullSrc    = FULL    + name + ".mp4?" + VIDEO_VER;
     v.src = v.dataset.previewSrc;
     v.addEventListener("loadedmetadata", () => {
-      // Detect narrow / portrait videos and tag the row for CSS layout change
-      if (v.videoWidth && v.videoHeight && (v.videoWidth / v.videoHeight) < NARROW_THRESHOLD) {
-        row.classList.add("portrait");
+      if (v.videoWidth && v.videoHeight) {
+        const aspect = v.videoWidth / v.videoHeight;
+        // Size each video panel from its real media dimensions: common width,
+        // height follows the video's aspect ratio instead of a fixed default.
         vPanel.style.aspectRatio = `${v.videoWidth} / ${v.videoHeight}`;
+        if (aspect < NARROW_THRESHOLD) row.classList.add("portrait");
       }
     }, { once: true });
     v.addEventListener("loadeddata", () => {

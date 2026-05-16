@@ -65,7 +65,7 @@
   position: relative;
   margin: 0;
   flex: 0 0 auto;
-  background: #f5f5f5;
+  background: #ffffff;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 6px 14px rgba(0,0,0,.14);
@@ -74,7 +74,7 @@
   width: auto;
   height: 27.8cqw;
   max-width: none;
-  background: #f5f5f5;
+  background: #ffffff;
   display: block;
 }
 #demoReconVideo.demo-recon-twitter-grade {
@@ -116,7 +116,7 @@
   padding: 8px;
   border: 1px solid rgba(24,29,35,.09);
   border-radius: 8px;
-  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(245,247,249,.82));
+  background: #ffffff;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.9),
     0 12px 28px rgba(20,24,30,.11);
@@ -132,7 +132,7 @@
   padding: 0;
   border: 1px solid rgba(24,29,35,.12);
   border-radius: 7px;
-  background: #f5f7f8;
+  background: #ffffff;
   cursor: pointer;
   flex: 0 0 auto;
   overflow: hidden;
@@ -297,16 +297,12 @@ figure.image figcaption {
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
-  background: #f5f5f5;
-  border-radius: 15px;
-  padding: 8px;
-  box-shadow: 0 6px 12px rgba(0,0,0,.15);
 }
 .row-panels > * { flex: 0 0 auto; }
 .row-video {
   width: 100%;
   position: relative;
-  background: #f5f5f5;
+  background: #ffffff;
   aspect-ratio: 2580 / 720;
   overflow: hidden;
   border-radius: 10px;
@@ -317,7 +313,8 @@ figure.image figcaption {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: #f5f5f5;
+  background: #ffffff;
+  border-radius: inherit;
   display: block;
 }
 .row.portrait .row-panels {
@@ -336,9 +333,10 @@ figure.image figcaption {
   width: 100%;
   aspect-ratio: 16 / 9;
   position: relative;
-  background: #f5f5f5;
+  background: #ffffff;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 15px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   cursor: grab;
 }
 .row-viewer:active { cursor: grabbing; }
@@ -354,8 +352,8 @@ figure.image figcaption {
   inset: 0;
   width: 100%;
   height: 100%;
-  background: #f5f5f5;
-  --poster-color: #f5f5f5;
+  background: #ffffff;
+  --poster-color: #ffffff;
 }
 .viewer-status {
   position: absolute;
