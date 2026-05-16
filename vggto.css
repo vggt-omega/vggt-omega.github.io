@@ -349,12 +349,10 @@ figure.image figcaption {
   border-radius: inherit;
   display: block;
 }
-.row.portrait .row-panels {
-  /* Needs an explicit width: as a column-flex item, the auto side margins
-     (used to centre the narrower portrait card) cancel align-items:stretch,
-     so without this the panel shrink-wraps to 0 and the video disappears. */
-  width: 100%;
-  max-width: 720px;
+.row.portrait .row-video {
+  width: clamp(124px, 23.55vw, 354px);
+  max-width: 100%;
+  height: clamp(220px, 42vw, 630px);
   margin-left: auto;
   margin-right: auto;
 }
@@ -525,10 +523,6 @@ figure.image figcaption {
 }
 @media (max-width: 720px) {
   .row-viewer { aspect-ratio: 4 / 3; }
-  .row.portrait .row-panels {
-    max-width: 100%;
-  }
-  .row.portrait .row-viewer { aspect-ratio: 4 / 3; }
   .demo-teaser-grid {
     flex-direction: column;
     overflow-x: visible;

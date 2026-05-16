@@ -34,12 +34,18 @@ const CAMERA_VIEWS_VER = "views1";
 const PREVIEW   = "./assets/videos/preview/";
 const THUMBS    = "./assets/videos/thumbs/";
 const FULL      = "./assets/videos/full/";
-// Videos whose composite is narrow / portrait — detect via aspect ratio after
-// loadedmetadata and add .portrait to the row for a different grid layout.
-const NARROW_THRESHOLD = 2.0;  // width/height < this → portrait row
+// Known portrait clips get a provisional layout before metadata loads. Some
+// browser/media combinations expose the encoded dimensions instead of the
+// displayed rotated dimensions, so the explicit list is also honored after
+// metadata loads.
 const PORTRAIT_NAMES = new Set([
   "wwm_20260430_11_fps4",
 ]);
+const REFERENCE_VIDEO_ASPECT = 2580 / 720;
+const PORTRAIT_VIDEO_MAX_HEIGHT = 630;
+const PORTRAIT_VIDEO_MIN_HEIGHT = 220;
+const PORTRAIT_VIDEO_VIEWPORT_RATIO = 0.68;
+const portraitVideoLayouts = new Set();
 const PAGES = NAMES.map((name) => [name]);
 const TOTAL_PAGES = Math.max(1, PAGES.length);
 const initialExample = new URLSearchParams(window.location.search).get("example");
@@ -66,6 +72,34 @@ let cameraViews = {
   default: DEFAULT_THREE_CAMERA,
   scenes: {},
 };
+
+function updatePortraitVideoLayout(layout) {
+  const { panel, video, forcePortrait } = layout;
+  if (!panel.isConnected || !video.videoWidth || !video.videoHeight) return;
+
+  const naturalAspect = video.videoWidth / video.videoHeight;
+  const aspect = forcePortrait && naturalAspect > 1 ? 1 / naturalAspect : naturalAspect;
+  const parentWidth = panel.parentElement?.clientWidth || panel.clientWidth || 720;
+  const viewportHeight =
+    window.innerHeight || document.documentElement.clientHeight || 900;
+  const referenceHeight = parentWidth / REFERENCE_VIDEO_ASPECT;
+  const preferredHeight = Math.min(
+    PORTRAIT_VIDEO_MAX_HEIGHT,
+    viewportHeight * PORTRAIT_VIDEO_VIEWPORT_RATIO,
+    Math.max(PORTRAIT_VIDEO_MIN_HEIGHT, referenceHeight),
+  );
+  const height = Math.max(180, Math.min(preferredHeight, parentWidth / aspect));
+  const width = Math.min(parentWidth, height * aspect);
+
+  panel.style.width = `${Math.round(width)}px`;
+  panel.style.height = `${Math.round(height)}px`;
+}
+
+function updatePortraitVideoLayouts() {
+  for (const layout of portraitVideoLayouts) updatePortraitVideoLayout(layout);
+}
+
+window.addEventListener("resize", updatePortraitVideoLayouts);
 
 function numericVector(value, fallback) {
   const v = value || {};
@@ -373,11 +407,21 @@ if (grid) {
     v.src = v.dataset.previewSrc;
     v.addEventListener("loadedmetadata", () => {
       if (v.videoWidth && v.videoHeight) {
-        const aspect = v.videoWidth / v.videoHeight;
-        // Size each video panel from its real media dimensions: common width,
-        // height follows the video's aspect ratio instead of a fixed default.
-        vPanel.style.aspectRatio = `${v.videoWidth} / ${v.videoHeight}`;
-        if (aspect < NARROW_THRESHOLD) row.classList.add("portrait");
+        const isPortraitVideo = v.videoHeight > v.videoWidth;
+        const shouldUsePortraitLayout = isPortrait || isPortraitVideo;
+        const displayedWidth = shouldUsePortraitLayout ?
+          Math.min(v.videoWidth, v.videoHeight) : v.videoWidth;
+        const displayedHeight = shouldUsePortraitLayout ?
+          Math.max(v.videoWidth, v.videoHeight) : v.videoHeight;
+        // Use the real media aspect ratio. Tall videos get a bounded height
+        // and derive width from that so they don't become overly tall cards.
+        vPanel.style.aspectRatio = `${displayedWidth} / ${displayedHeight}`;
+        row.classList.toggle("portrait", shouldUsePortraitLayout);
+        if (shouldUsePortraitLayout) {
+          const layout = { panel: vPanel, video: v, forcePortrait: isPortrait };
+          portraitVideoLayouts.add(layout);
+          updatePortraitVideoLayout(layout);
+        }
       }
     }, { once: true });
     v.addEventListener("loadeddata", () => {
@@ -547,6 +591,7 @@ if (grid) {
       const v = activeViewers.pop();
       try { disposeModel(v); v.controls.dispose(); v.renderer.dispose(); } catch (_) {}
     }
+    portraitVideoLayouts.clear();
     grid.innerHTML = "";
 
     const items = PAGES[page] || [];
