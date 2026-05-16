@@ -19,7 +19,7 @@ const NAMES = [
   "DE62PUU1FZg_0018150_0019950_seg0-1025",
   "dyz_20260430_15",
   "loop_closure__temple_castle__31996068_fps4",
-  // "dyz_20260430_19_fps3",
+  "dyz_20260430_19_fps3",
   "DjaOuqgRWGQ_0041828_0043628_seg0-1025_hstack",
   "wwm_20260430_11_fps4",
   "lIjGmjqyiZk_0102750_0104550_seg0-1025",
