@@ -130,10 +130,9 @@
 <section class="section vggto-demo-teaser">
   <div class="container is-max-widescreen demo-teaser-container">
     <div class="demo-teaser-stage">
-      <button type="button" class="demo-teaser-arrow demo-teaser-arrow-prev" data-demo-step="-1" aria-label="Previous demo">‹</button>
       <div class="demo-teaser-grid">
         <figure class="demo-teaser-panel">
-          <video id="demoInputVideo" muted playsinline preload="auto" poster="./assets/demos/transmission_video_poster.jpg">
+          <video id="demoInputVideo" muted playsinline autoplay preload="auto" poster="./assets/demos/transmission_video_poster.jpg">
             <source src="./assets/demos/transmission_video.mp4" type="video/mp4">
           </video>
           <figcaption>
@@ -142,19 +141,14 @@
           </figcaption>
         </figure>
         <figure class="demo-teaser-panel">
-          <video id="demoReconVideo" muted playsinline preload="auto" poster="./assets/demos/transmission_v1_poster.jpg">
+          <video id="demoReconVideo" muted playsinline autoplay preload="auto" poster="./assets/demos/transmission_v1_poster.jpg">
             <source src="./assets/demos/transmission_v1.mp4" type="video/mp4">
           </video>
           <figcaption>Reconstruction</figcaption>
         </figure>
       </div>
-      <button type="button" class="demo-teaser-arrow demo-teaser-arrow-next" data-demo-step="1" aria-label="Next demo">›</button>
     </div>
-    <div class="demo-teaser-status" aria-label="Demo selector">
-      <button type="button" class="demo-teaser-dot active" data-demo-index="0" aria-label="Show transmission demo" aria-pressed="true"></button>
-      <span class="demo-teaser-current" id="demoTeaserLabel" aria-live="polite">Transmission</span>
-      <button type="button" class="demo-teaser-dot" data-demo-index="1" aria-label="Show fight demo" aria-pressed="false"></button>
-    </div>
+    <div class="demo-teaser-thumbs" id="demoTeaserThumbs" aria-label="Demo selector"></div>
   </div>
 </section>
 
@@ -284,18 +278,64 @@
       inputPlaybackRate: 1,
       reconPlaybackRate: 0.95,
     },
+    {
+      label: 'Wingsuit',
+      input: './assets/demos/wingsuit.mp4',
+      recon: './assets/demos/wingsuit_v2.mp4',
+      credit: '',
+      inputPlaybackRate: 1,
+      reconPlaybackRate: 1,
+    },
   ];
   const inputVideo = document.getElementById('demoInputVideo');
   const reconVideo = document.getElementById('demoReconVideo');
   const creditEl = document.querySelector('.demo-teaser-credit');
+  const thumbsEl = document.getElementById('demoTeaserThumbs');
   const videos = [inputVideo, reconVideo].filter(Boolean);
-  const indexButtons = Array.from(document.querySelectorAll('[data-demo-index]'));
-  const stepButtons = Array.from(document.querySelectorAll('[data-demo-step]'));
-  const demoLabelEl = document.getElementById('demoTeaserLabel');
+  const indexButtons = createThumbnailControls();
   const endedVideos = new Set();
   let replayTimer = null;
   let demoLoadToken = 0;
-  let currentDemoIndex = 0;
+
+  function createThumbnailControls() {
+    if (!thumbsEl) return [];
+    return demos.map((demo, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'demo-teaser-thumb';
+      button.dataset.demoIndex = String(index);
+      button.setAttribute('aria-label', `Show ${demo.label || `demo ${index + 1}`} demo`);
+      button.setAttribute('aria-pressed', 'false');
+
+      const thumb = document.createElement('video');
+      thumb.muted = true;
+      thumb.playsInline = true;
+      thumb.preload = 'metadata';
+      thumb.src = demo.input;
+      thumb.tabIndex = -1;
+      thumb.setAttribute('aria-hidden', 'true');
+      if (demo.inputPoster) thumb.poster = demo.inputPoster;
+      if (!demo.inputPoster) {
+        thumb.addEventListener('loadedmetadata', () => {
+          try { thumb.currentTime = 0.1; } catch (_) {}
+        }, { once: true });
+      }
+
+      button.appendChild(thumb);
+      button.addEventListener('mouseenter', () => playVideo(thumb));
+      button.addEventListener('focus', () => playVideo(thumb));
+      button.addEventListener('mouseleave', () => {
+        thumb.pause();
+        try { thumb.currentTime = demo.inputPoster ? 0 : 0.1; } catch (_) {}
+      });
+      button.addEventListener('blur', () => {
+        thumb.pause();
+        try { thumb.currentTime = demo.inputPoster ? 0 : 0.1; } catch (_) {}
+      });
+      thumbsEl.appendChild(button);
+      return button;
+    });
+  }
 
   function clearReplayTimer() {
     if (!replayTimer) return;
@@ -326,7 +366,11 @@
   }
 
   function setVideoPoster(video, poster) {
-    if (!video || !poster) return;
+    if (!video) return;
+    if (!poster) {
+      video.removeAttribute('poster');
+      return;
+    }
     const nextPoster = new URL(poster, window.location.href).href;
     if (video.poster !== nextPoster) video.poster = nextPoster;
   }
@@ -362,7 +406,6 @@
     index = (index + demos.length) % demos.length;
     const demo = demos[index];
     if (!demo) return;
-    currentDemoIndex = index;
     const loadToken = ++demoLoadToken;
     clearReplayTimer();
     videos.forEach((video) => video.pause());
@@ -376,7 +419,6 @@
       creditEl.textContent = demo.credit || '';
       creditEl.style.display = demo.credit ? '' : 'none';
     }
-    if (demoLabelEl) demoLabelEl.textContent = demo.label || `Demo ${index + 1}`;
     indexButtons.forEach((button) => {
       const active = Number(button.dataset.demoIndex) === index;
       button.classList.toggle('active', active);
@@ -399,11 +441,6 @@
 
   indexButtons.forEach((button) => {
     button.addEventListener('click', () => setDemo(Number(button.dataset.demoIndex)));
-  });
-  stepButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      setDemo(currentDemoIndex + Number(button.dataset.demoStep || 0));
-    });
   });
   setDemo(0);
 })();
