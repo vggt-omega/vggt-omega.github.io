@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="stylesheet" href="./vggto.css?v=teaser-thumbs-mobile-1">
+  <link rel="stylesheet" href="./vggto.css?v=comparison-1">
   <link rel="icon" type="image/svg+xml" href="./assets/img/favicon.svg">
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -36,6 +36,7 @@
   <script defer src="./static/js/fontawesome.all.min.js"></script>
   <script src="./static/js/bulma-carousel.min.js"></script>
   <script src="./static/js/bulma-slider.min.js"></script>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 
   <!-- importmap polyfill for Safari/iOS < 16.4 (native importmap landed in
        Safari 16.4 / March 2023). The shim no-ops where importmap is native.
@@ -217,6 +218,43 @@
     <div class="gallery-thumbs" id="galleryThumbs" role="group" aria-label="Point-of-view example selector"></div>
 
     <noscript><p>Enable JavaScript to load the examples.</p></noscript>
+  </div>
+</section>
+
+<!-- ============================================================
+     QUALITATIVE COMPARISON
+============================================================ -->
+<section class="section vggto-comparison" id="qualitative-comparison">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Qualitative Comparison</h2>
+
+    <div class="comparison-grid">
+      <div class="comparison-selector" id="comparisonExampleSelector" aria-label="Qualitative comparison example selector">
+        <!-- examples injected below -->
+      </div>
+
+      <div class="comparison-model-wrapper">
+        <div class="comparison-model-label">VGGT-Ω</div>
+        <model-viewer id="comparisonOmegaViewer" loading="eager"
+          touch-action="pan-y" environment-image="legacy"
+          src="./assets/comparison/snow_lift_omega.glb"
+          zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 1m"
+          max-camera-orbit="auto auto 80m" interaction-prompt="none" shadow-intensity="0" ar>
+        </model-viewer>
+      </div>
+
+      <div class="comparison-model-wrapper">
+        <div class="comparison-model-label">Depth Anything 3</div>
+        <model-viewer id="comparisonDa3Viewer" loading="eager"
+          touch-action="pan-y" environment-image="legacy"
+          src="./assets/comparison/snow_lift_da3.glb"
+          zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 1m"
+          max-camera-orbit="auto auto 80m" interaction-prompt="none" shadow-intensity="0" ar>
+        </model-viewer>
+      </div>
+    </div>
+
+    <noscript><p>Enable JavaScript to load the comparison examples.</p></noscript>
   </div>
 </section>
 
@@ -476,6 +514,291 @@
     button.addEventListener('click', () => setDemo(Number(button.dataset.demoIndex)));
   });
   setDemo(0);
+})();
+</script>
+<script>
+(() => {
+  const defaultComparisonCamera = {
+    theta: Math.PI,
+    phi: 70 * Math.PI / 180,
+    radiusScale: 1,
+  };
+  const examples = [
+    {
+      id: 'snow_lift',
+      label: 'Snow lift',
+      video: './assets/comparison/snow_lift.mp4',
+      omega: './assets/comparison/snow_lift_omega.glb',
+      da3: './assets/comparison/snow_lift_da3.glb',
+      cameras: {
+        omega: {
+          theta: 3.072979,
+          phi: 1.461906,
+          radiusScale: 1.168546,
+        },
+        da3: {
+          theta: -0.202522,
+          phi: 1.255307,
+          radiusScale: 4.076302,
+        },
+      },
+    },
+    {
+      id: 'bushes',
+      label: 'Bushes',
+      video: './assets/comparison/bushes.mp4',
+      omega: './assets/comparison/bushes_omega.glb',
+      da3: './assets/comparison/bushes_da3.glb',
+      cameras: {
+        omega: {
+          theta: 3.141593,
+          phi: 1.194267,
+          radiusScale: 1.254116,
+        },
+        da3: {
+          theta: -0.885915,
+          phi: 0.914961,
+          radiusScale: 1.532466,
+        },
+      },
+    },
+  ];
+
+  function initComparison() {
+    const selector = document.getElementById('comparisonExampleSelector');
+    const omegaViewer = document.getElementById('comparisonOmegaViewer');
+    const da3Viewer = document.getElementById('comparisonDa3Viewer');
+    if (!selector || !omegaViewer || !da3Viewer) return;
+
+    const buttons = [];
+    let activeIndex = 0;
+    let loadToken = 0;
+    let syncEnabled = false;
+    let syncingCamera = false;
+    let pendingSyncSource = null;
+    let syncFrame = null;
+    let enableSyncFrame = null;
+    const viewers = {
+      omega: omegaViewer,
+      da3: da3Viewer,
+    };
+    const autoOrbits = {
+      omega: null,
+      da3: null,
+    };
+    const initialized = {
+      omega: false,
+      da3: false,
+    };
+
+    function prepareVideo(video) {
+      if (!video) return;
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.loop = true;
+      video.setAttribute('muted', '');
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+    }
+
+    function playVideo(video) {
+      prepareVideo(video);
+      const p = video.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
+
+    function cameraFor(example, key) {
+      return (example.cameras && example.cameras[key]) || defaultComparisonCamera;
+    }
+
+    function normalizeAngle(rad) {
+      return Math.atan2(Math.sin(rad), Math.cos(rad));
+    }
+
+    function clampPhi(phi) {
+      return Math.max(0.001, Math.min(Math.PI - 0.001, phi));
+    }
+
+    function applyCamera(key, camera) {
+      const viewer = viewers[key];
+      const autoOrbit = autoOrbits[key];
+      if (!viewer || !camera || !autoOrbit) return;
+      viewer.cameraOrbit = `${camera.theta}rad ${camera.phi}rad ${autoOrbit.radius * camera.radiusScale}m`;
+      if (viewer.resetTurntableRotation) viewer.resetTurntableRotation(0);
+      if (viewer.jumpCameraToGoal) viewer.jumpCameraToGoal();
+    }
+
+    function setViewerSource(key, src) {
+      const viewer = viewers[key];
+      if (!viewer) return;
+      viewer.setAttribute('camera-orbit', `${defaultComparisonCamera.theta}rad ${defaultComparisonCamera.phi}rad auto`);
+      viewer.removeAttribute('src');
+      viewer.setAttribute('src', src);
+    }
+
+    function markViewerInitialized(key) {
+      const viewer = viewers[key];
+      const example = examples[activeIndex];
+      if (!viewer || !example) return;
+      try {
+        autoOrbits[key] = viewer.getCameraOrbit();
+        applyCamera(key, cameraFor(example, key));
+        initialized[key] = true;
+        if (initialized.omega && initialized.da3) {
+          if (enableSyncFrame) window.cancelAnimationFrame(enableSyncFrame);
+          enableSyncFrame = window.requestAnimationFrame(() => {
+            enableSyncFrame = null;
+            syncEnabled = initialized.omega && initialized.da3;
+          });
+        }
+      } catch (_) {}
+    }
+
+    function syncCameraFrom(sourceKey) {
+      if (!syncEnabled || syncingCamera) return;
+      const targetKey = sourceKey === 'omega' ? 'da3' : 'omega';
+      const sourceViewer = viewers[sourceKey];
+      const targetViewer = viewers[targetKey];
+      const sourceAutoOrbit = autoOrbits[sourceKey];
+      const targetAutoOrbit = autoOrbits[targetKey];
+      const example = examples[activeIndex];
+      if (!sourceViewer || !targetViewer || !sourceAutoOrbit || !targetAutoOrbit || !example) return;
+
+      let sourceOrbit;
+      try {
+        sourceOrbit = sourceViewer.getCameraOrbit();
+      } catch (_) {
+        return;
+      }
+
+      const sourceInit = cameraFor(example, sourceKey);
+      const targetInit = cameraFor(example, targetKey);
+      const deltaTheta = normalizeAngle(sourceOrbit.theta - sourceInit.theta);
+      const deltaPhi = sourceOrbit.phi - sourceInit.phi;
+      const sourceBaseRadius = sourceAutoOrbit.radius * sourceInit.radiusScale;
+      const targetBaseRadius = targetAutoOrbit.radius * targetInit.radiusScale;
+      const relativeZoom = sourceBaseRadius
+        ? sourceOrbit.radius / sourceBaseRadius
+        : 1;
+      const targetTheta = targetInit.theta + deltaTheta;
+      const targetPhi = clampPhi(targetInit.phi + deltaPhi);
+      const targetRadius = targetBaseRadius * relativeZoom;
+
+      syncingCamera = true;
+      targetViewer.cameraOrbit = `${targetTheta}rad ${targetPhi}rad ${targetRadius}m`;
+      if (targetViewer.jumpCameraToGoal) targetViewer.jumpCameraToGoal();
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          syncingCamera = false;
+        });
+      });
+    }
+
+    function scheduleCameraSync(sourceKey) {
+      if (!syncEnabled || syncingCamera) return;
+      pendingSyncSource = sourceKey;
+      if (syncFrame) return;
+      syncFrame = window.requestAnimationFrame(() => {
+        const key = pendingSyncSource;
+        pendingSyncSource = null;
+        syncFrame = null;
+        syncCameraFrom(key);
+      });
+    }
+
+    function setExample(index) {
+      activeIndex = (index + examples.length) % examples.length;
+      const example = examples[activeIndex];
+      loadToken += 1;
+      syncEnabled = false;
+      pendingSyncSource = null;
+      if (enableSyncFrame) {
+        window.cancelAnimationFrame(enableSyncFrame);
+        enableSyncFrame = null;
+      }
+      initialized.omega = false;
+      initialized.da3 = false;
+      autoOrbits.omega = null;
+      autoOrbits.da3 = null;
+      setViewerSource('omega', example.omega);
+      setViewerSource('da3', example.da3);
+
+      buttons.forEach((button, buttonIndex) => {
+        const active = buttonIndex === activeIndex;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+        const video = button.querySelector('video');
+        if (active) {
+          playVideo(video);
+        } else if (video) {
+          video.pause();
+          try { video.currentTime = 0.1; } catch (_) {}
+        }
+      });
+    }
+
+    examples.forEach((example, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'comparison-thumb';
+      button.dataset.comparisonIndex = String(index);
+      button.setAttribute('aria-label', `Show ${example.label} comparison`);
+      button.setAttribute('aria-pressed', 'false');
+
+      const video = document.createElement('video');
+      video.src = example.video;
+      video.preload = index === 0 ? 'auto' : 'metadata';
+      video.tabIndex = -1;
+      video.setAttribute('aria-hidden', 'true');
+      if (example.poster) video.poster = example.poster;
+      prepareVideo(video);
+      video.addEventListener('loadedmetadata', () => {
+        if (index !== activeIndex) {
+          try { video.currentTime = 0.1; } catch (_) {}
+        }
+      }, { once: true });
+
+      const label = document.createElement('span');
+      label.textContent = example.label;
+
+      button.appendChild(video);
+      button.appendChild(label);
+      button.addEventListener('click', () => setExample(index));
+      button.addEventListener('mouseenter', () => playVideo(video));
+      button.addEventListener('mouseleave', () => {
+        if (index !== activeIndex) {
+          video.pause();
+          try { video.currentTime = 0.1; } catch (_) {}
+        }
+      });
+      selector.appendChild(button);
+      buttons.push(button);
+    });
+
+    Object.entries(viewers).forEach(([key, viewer]) => {
+      viewer.addEventListener('load', () => {
+        const token = loadToken;
+        window.requestAnimationFrame(() => {
+          if (token === loadToken) markViewerInitialized(key);
+        });
+      });
+      viewer.addEventListener('camera-change', () => {
+        scheduleCameraSync(key);
+      });
+    });
+
+    const ready = window.customElements && customElements.whenDefined
+      ? customElements.whenDefined('model-viewer')
+      : Promise.resolve();
+    ready.then(() => setExample(0));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initComparison);
+  } else {
+    initComparison();
+  }
 })();
 </script>
 <script type="module" src="./gallery.js?v=portrait-height-1p5"></script>
