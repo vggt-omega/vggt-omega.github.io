@@ -198,30 +198,6 @@
 </section>
 
 <!-- ============================================================
-     POINT-OF-VIEW EXAMPLES
-============================================================ -->
-<section class="section" id="gallery">
-  <div class="container is-max-widescreen">
-    <h2 class="title is-3 has-text-centered">Examples</h2>
-    <div class="content has-text-justified">
-      <p>
-        Reconstructions of point-of-view sequences across static landmarks,
-        dynamic action, aerial / FPV flights, indoor captures, and underwater
-        scenes.
-      </p>
-    </div>
-
-    <div class="vggto-grid" id="galleryGrid">
-      <!-- rows injected by gallery.js -->
-    </div>
-
-    <div class="gallery-thumbs" id="galleryThumbs" role="group" aria-label="Point-of-view example selector"></div>
-
-    <noscript><p>Enable JavaScript to load the examples.</p></noscript>
-  </div>
-</section>
-
-<!-- ============================================================
      QUALITATIVE COMPARISON
 ============================================================ -->
 <section class="section vggto-comparison" id="qualitative-comparison">
@@ -255,6 +231,30 @@
     </div>
 
     <noscript><p>Enable JavaScript to load the comparison examples.</p></noscript>
+  </div>
+</section>
+
+<!-- ============================================================
+     QUALITATIVE EXAMPLES
+============================================================ -->
+<section class="section" id="gallery">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Qualitative Examples</h2>
+    <div class="content has-text-justified">
+      <p>
+        Reconstructions of point-of-view sequences across static landmarks,
+        dynamic action, aerial / FPV flights, indoor captures, and underwater
+        scenes.
+      </p>
+    </div>
+
+    <div class="vggto-grid" id="galleryGrid">
+      <!-- rows injected by gallery.js -->
+    </div>
+
+    <div class="gallery-thumbs" id="galleryThumbs" role="group" aria-label="Point-of-view example selector"></div>
+
+    <noscript><p>Enable JavaScript to load the examples.</p></noscript>
   </div>
 </section>
 
@@ -526,7 +526,6 @@
   const examples = [
     {
       id: 'snow_lift',
-      label: 'Snow lift',
       video: './assets/comparison/snow_lift.mp4',
       omega: './assets/comparison/snow_lift_omega.glb',
       da3: './assets/comparison/snow_lift_da3.glb',
@@ -545,7 +544,6 @@
     },
     {
       id: 'bushes',
-      label: 'Bushes',
       video: './assets/comparison/bushes.mp4',
       omega: './assets/comparison/bushes_omega.glb',
       da3: './assets/comparison/bushes_da3.glb',
@@ -564,7 +562,6 @@
     },
     {
       id: 'tower',
-      label: 'Tower',
       video: './assets/comparison/tower.mp4',
       omega: './assets/comparison/tower_omega.glb',
       da3: './assets/comparison/tower_da3.glb',
@@ -762,7 +759,7 @@
       button.type = 'button';
       button.className = 'comparison-thumb';
       button.dataset.comparisonIndex = String(index);
-      button.setAttribute('aria-label', `Show ${example.label} comparison`);
+      button.setAttribute('aria-label', `Show qualitative comparison example ${index + 1}`);
       button.setAttribute('aria-pressed', 'false');
 
       const video = document.createElement('video');
@@ -778,11 +775,7 @@
         }
       }, { once: true });
 
-      const label = document.createElement('span');
-      label.textContent = example.label;
-
       button.appendChild(video);
-      button.appendChild(label);
       button.addEventListener('click', () => setExample(index));
       button.addEventListener('mouseenter', () => playVideo(video));
       button.addEventListener('mouseleave', () => {

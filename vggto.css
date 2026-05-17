@@ -468,25 +468,6 @@ figure.image figcaption {
   transform: scale(1.01);
   transition: filter .18s, transform .18s;
 }
-.comparison-thumb span {
-  position: absolute;
-  left: 12px;
-  bottom: 9px;
-  z-index: 2;
-  max-width: calc(100% - 24px);
-  font-family: "Google Sans", "Noto Sans", sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: .04em;
-  color: #fff;
-  text-align: left;
-  text-shadow: 0 1px 4px rgba(0,0,0,.45);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  pointer-events: none;
-}
 .comparison-thumb:hover,
 .comparison-thumb.active {
   border-color: rgba(24,29,35,.24);
