@@ -134,6 +134,8 @@
 .demo-teaser-thumb,
 .gallery-thumb {
   position: relative;
+  width: 120px;
+  width: clamp(96px, 10vw, 148px);
   width: clamp(96px, 10cqw, 148px);
   aspect-ratio: 16 / 9;
   padding: 0;
@@ -540,6 +542,24 @@ figure.image figcaption {
   .demo-teaser-panel video {
     width: 100%;
     height: auto;
+  }
+  .demo-teaser-thumbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    width: 100%;
+    gap: 8px;
+    padding: 10px;
+    overflow-x: visible;
+  }
+  .demo-teaser-thumb {
+    width: 100%;
+    min-width: 0;
+    flex: none;
+  }
+  .demo-teaser-thumb:hover,
+  .demo-teaser-thumb.active,
+  .demo-teaser-thumb.active:hover {
+    transform: none;
   }
   .iv-entry { grid-template-columns: 1fr; }
 }
