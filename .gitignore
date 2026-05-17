@@ -5,3 +5,5 @@
 .vscode/
 .idea/
 node_modules/
+tests/
+CLAUDE.md
