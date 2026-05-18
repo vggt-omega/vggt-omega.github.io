@@ -243,18 +243,35 @@
     </div>
 
     <div class="interactive-demo-thumbs" id="interactiveDemoThumbs" role="group" aria-label="Interactive demo selector">
-      <video src="./assets/interactive_demos/thumbs/underwater.mp4?v=thumb2"
+      <button type="button" class="interactive-demo-thumb"
         data-scene="underwater"
         data-glb="./assets/interactive_demos/underwater.glb?v=20260518-031627"
-        loop playsinline muted preload="auto"></video>
-      <video src="./assets/interactive_demos/thumbs/boat.mp4?v=thumb2"
+        aria-label="Show underwater interactive demo" aria-pressed="false">
+        <video src="./assets/interactive_demos/thumbs/underwater.mp4?v=thumb2"
+          loop playsinline muted preload="auto" tabindex="-1" aria-hidden="true"></video>
+      </button>
+      <button type="button" class="interactive-demo-thumb"
         data-scene="boat"
         data-glb="./assets/interactive_demos/boat.glb?v=20260518-071103"
-        loop playsinline muted preload="auto"></video>
-      <video src="./assets/interactive_demos/thumbs/drone_tree.mp4?v=thumb2"
+        aria-label="Show boat interactive demo" aria-pressed="false">
+        <video src="./assets/interactive_demos/thumbs/boat.mp4?v=thumb2"
+          loop playsinline muted preload="auto" tabindex="-1" aria-hidden="true"></video>
+      </button>
+      <button type="button" class="interactive-demo-thumb"
         data-scene="drone_tree"
         data-glb="./assets/interactive_demos/drone_tree.glb?v=20260518-052320"
-        loop playsinline muted preload="auto"></video>
+        aria-label="Show drone tree interactive demo" aria-pressed="false">
+        <video src="./assets/interactive_demos/thumbs/drone_tree.mp4?v=thumb2"
+          loop playsinline muted preload="auto" tabindex="-1" aria-hidden="true"></video>
+      </button>
+      <button type="button" class="interactive-demo-thumb interactive-demo-thumb-portrait"
+        data-scene="drone_far"
+        data-glb="./assets/interactive_demos/drone_far.glb?v=20260518-081100"
+        aria-label="Show drone far interactive demo" aria-pressed="false">
+        <video src="./assets/interactive_demos/thumbs/drone_far.mp4?v=thumb1"
+          width="228" height="406"
+          loop playsinline muted preload="auto" tabindex="-1" aria-hidden="true"></video>
+      </button>
     </div>
   </div>
 </section>

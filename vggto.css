@@ -695,7 +695,7 @@ figure.image figcaption {
 .interactive-demo-stage {
   width: 100%;
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 40 / 27;
   margin: 18px 0 14px;
   background: #f5f5f5;
   border-radius: 8px;
@@ -745,51 +745,121 @@ figure.image figcaption {
 .interactive-demo-thumbs {
   display: flex;
   flex-wrap: nowrap;
-  gap: 10px;
+  justify-content: flex-start;
   align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  gap: 8px;
+  margin: 14px auto 4px;
   overflow-x: auto;
-  padding: 10px 0 14px;
-  margin-bottom: 4px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-.interactive-demo-thumbs video {
-  flex: 0 0 auto;
-  width: auto;
-  height: 120px;
-  max-width: none;
-  display: block;
-  object-fit: cover;
-  background: #ffffff;
-  border: 3px solid transparent;
+  padding: 24px 28px;
+  border: 1px solid rgba(24,29,35,.09);
   border-radius: 8px;
-  cursor: pointer;
-  transition: border-color .18s, box-shadow .18s, filter .18s, transform .18s;
-}
-.interactive-demo-thumbs video:hover,
-.interactive-demo-thumbs video.active {
-  border-color: #79b4f2;
-  box-shadow: 0 0 10px rgba(121,180,242,.46);
-  filter: saturate(1.04) contrast(1.02);
-  transform: scale(1.04);
-}
-.interactive-demo-thumbs video:focus-visible {
-  outline: 2px solid rgba(24,29,35,.72);
-  outline-offset: 4px;
+  background: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 12px 28px rgba(20,24,30,.11);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 .interactive-demo-thumbs::-webkit-scrollbar {
-  height: 6px;
+  display: none;
 }
-.interactive-demo-thumbs::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+.interactive-demo-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  display: block;
+  width: 213px;
+  height: 120px;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 1px solid rgba(24,29,35,.12);
+  border-radius: 7px;
+  background: #ffffff;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.78),
+    0 4px 9px rgba(20,24,30,.11);
+  transform: translateZ(0) scale(1);
+  transform-origin: center;
+  transition: border-color .18s, box-shadow .18s, transform .18s;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  line-height: 0;
 }
-.interactive-demo-thumbs::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 10px;
+.interactive-demo-thumb-portrait {
+  width: 68px;
+  aspect-ratio: 9 / 16;
 }
-.interactive-demo-thumbs::-webkit-scrollbar-thumb:hover {
-  background: #555;
+.interactive-demo-thumb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.22)),
+    radial-gradient(circle at 50% 45%, rgba(255,255,255,0), rgba(0,0,0,.28));
+  opacity: .55;
+  pointer-events: none;
+  transition: opacity .18s;
+}
+.interactive-demo-thumb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  z-index: 2;
+  width: 24px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 1px 4px rgba(0,0,0,.24);
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  transition: transform .18s;
+}
+.interactive-demo-thumb video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  pointer-events: none;
+  background: #ffffff;
+  filter: saturate(.82) contrast(.95) brightness(.84);
+  transform: scale(1.01);
+  transition: filter .18s, transform .18s;
+}
+.interactive-demo-thumb:hover,
+.interactive-demo-thumb.active {
+  border-color: rgba(24,29,35,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    0 0 0 2px rgba(255,255,255,.95),
+    0 0 0 3px rgba(24,29,35,.16),
+    0 10px 22px rgba(20,24,30,.16);
+  z-index: 3;
+  transform: translateY(-2px) scale(1.25);
+}
+.interactive-demo-thumb:hover::before,
+.interactive-demo-thumb.active::before {
+  opacity: .12;
+}
+.interactive-demo-thumb:hover video,
+.interactive-demo-thumb.active video {
+  filter: saturate(1.04) contrast(1.02) brightness(1);
+  transform: scale(1.035);
+}
+.interactive-demo-thumbs:has(.interactive-demo-thumb:hover) .interactive-demo-thumb.active:not(:hover) {
+  transform: translateZ(0) scale(1);
+}
+.interactive-demo-thumb.active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+.interactive-demo-thumb:focus-visible {
+  outline: 2px solid rgba(24,29,35,.72);
+  outline-offset: 4px;
 }
 
 @media (max-width: 1024px) {
@@ -863,7 +933,21 @@ figure.image figcaption {
   .comparison-model-label {
     font-size: 12px;
   }
-  .interactive-demo-thumbs video {
+  .interactive-demo-thumbs {
+    width: 100%;
+    padding: 10px;
+    overflow-x: auto;
+  }
+  .interactive-demo-thumb {
+    width: 178px;
     height: 100px;
+  }
+  .interactive-demo-thumb-portrait {
+    width: 56px;
+  }
+  .interactive-demo-thumb:hover,
+  .interactive-demo-thumb.active,
+  .interactive-demo-thumb.active:hover {
+    transform: none;
   }
 }

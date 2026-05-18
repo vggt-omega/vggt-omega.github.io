@@ -1,6 +1,7 @@
 const MODEL_VIEWER_FOV_DEG = 45;
 const MODEL_VIEWER_MIN_RADIUS_SCALE = 0.5;
 const MODEL_VIEWER_MAX_RADIUS_SCALE = 3.5;
+const MODEL_VIEWER_STAGE_HEIGHT_SCALE = 1.2;
 const CAMERA_VIEWS_VER = "views6";
 const GLB_MAGIC = 0x46546c67;
 const GLB_JSON_CHUNK_TYPE = 0x4e4f534a;
@@ -106,7 +107,7 @@ function applyInitialModelViewerCamera(viewer, sceneName) {
   const maxDim = Math.max(dimensions?.x || 0, dimensions?.y || 0, dimensions?.z || 0) || 1;
   const fov = Number.isFinite(spec.fieldOfView) ? spec.fieldOfView : MODEL_VIEWER_FOV_DEG;
   const baseDist = maxDim / (2 * Math.tan(fov * Math.PI / 360));
-  const radius = Math.max(baseDist * spec.fitScale, 0.001);
+  const radius = Math.max(baseDist * spec.fitScale * MODEL_VIEWER_STAGE_HEIGHT_SCALE, 0.001);
   const target = {
     x: center.x + maxDim * spec.targetScale.x,
     y: center.y + maxDim * spec.targetScale.y,
@@ -440,7 +441,7 @@ function initInteractiveDemos() {
   const canvas = document.getElementById("interactiveDemoTrajectory");
   const status = document.getElementById("interactiveDemoStatus");
   const stage = viewer?.closest(".interactive-demo-stage");
-  const thumbs = Array.from(document.querySelectorAll("#interactiveDemoThumbs video"));
+  const thumbs = Array.from(document.querySelectorAll("#interactiveDemoThumbs .interactive-demo-thumb, #interactiveDemoThumbs > video"));
   if (!viewer || thumbs.length === 0) return;
 
   const overlay = canvas ? createTrajectoryOverlay(canvas, viewer) : null;
@@ -467,6 +468,10 @@ function initInteractiveDemos() {
     status.textContent = "Loading 3D...";
   }
 
+  function videoForThumb(thumb) {
+    return thumb?.tagName === "VIDEO" ? thumb : thumb?.querySelector("video");
+  }
+
   function selectThumb(activeThumb) {
     const glb = activeThumb.dataset.glb;
     if (!glb) return;
@@ -477,10 +482,11 @@ function initInteractiveDemos() {
       const active = thumb === activeThumb;
       thumb.classList.toggle("active", active);
       thumb.setAttribute("aria-pressed", String(active));
+      const video = videoForThumb(thumb);
       if (active) {
-        playVideo(thumb);
+        playVideo(video);
       } else {
-        resetThumbVideo(thumb);
+        resetThumbVideo(video);
       }
     });
 
@@ -534,9 +540,18 @@ function initInteractiveDemos() {
   });
 
   thumbs.forEach((thumb) => {
-    thumb.tabIndex = 0;
-    thumb.setAttribute("role", "button");
-    thumb.setAttribute("aria-label", "Show interactive demo");
+    const video = videoForThumb(thumb);
+    if (thumb.tagName !== "BUTTON") {
+      thumb.tabIndex = 0;
+      thumb.setAttribute("role", "button");
+    }
+    if (!thumb.hasAttribute("aria-label")) {
+      thumb.setAttribute("aria-label", "Show interactive demo");
+    }
+    if (video && video !== thumb) {
+      video.tabIndex = -1;
+      video.setAttribute("aria-hidden", "true");
+    }
     thumb.addEventListener("click", () => selectThumb(thumb));
     thumb.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -544,9 +559,13 @@ function initInteractiveDemos() {
         selectThumb(thumb);
       }
     });
-    thumb.addEventListener("mouseenter", () => playVideo(thumb));
+    thumb.addEventListener("mouseenter", () => playVideo(video));
+    thumb.addEventListener("focus", () => playVideo(video));
     thumb.addEventListener("mouseleave", () => {
-      if (!thumb.classList.contains("active")) resetThumbVideo(thumb);
+      if (!thumb.classList.contains("active")) resetThumbVideo(video);
+    });
+    thumb.addEventListener("blur", () => {
+      if (!thumb.classList.contains("active")) resetThumbVideo(video);
     });
   });
 
