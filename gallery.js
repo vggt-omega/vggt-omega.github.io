@@ -1,17 +1,11 @@
 /* =====================================================================
    Gallery: one example at a time. Each example =
      top    → composite preview video (auto-playing)
-     bottom → interactive Three.js GLB viewer
+     bottom → Google model-viewer with a transparent camera-trajectory overlay
    Switching uses the same video-thumbnail pattern as the demo teaser.
 ===================================================================== */
 
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import {
-  configureModelViewerLikeControls,
-  setModelViewerLikeZoomLimits,
-} from './three-viewer-controls.js?v=zoom-range-1';
 
 // Selected entries. Each name becomes its own selectable example.
 const NAMES = [
@@ -66,6 +60,9 @@ const GLB_NAME_OVERRIDES = {
 const GLB_VER = "clean1";
 function glbPath1M(name)   { return GLB_1M_DIR   + (GLB_NAME_OVERRIDES[name] || name) + ".glb?" + GLB_VER; }
 function glbPathFull(name) { return GLB_FULL_DIR + (GLB_NAME_OVERRIDES[name] || name) + ".glb?" + GLB_VER; }
+const MODEL_VIEWER_MIN_RADIUS_SCALE = 0.5;
+const MODEL_VIEWER_MAX_RADIUS_SCALE = 3.5;
+const MODEL_VIEWER_FOV_DEG = 45;
 
 const DEFAULT_THREE_CAMERA = {
   direction: { x: 0.232788, y: 0.200791, z: 0.951574 },
@@ -144,24 +141,50 @@ function cameraForScene(name) {
   return cameraViews.scenes[name] || cameraViews.default || DEFAULT_THREE_CAMERA;
 }
 
-function applyInitialCamera(camera, controls, maxDim, name) {
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function directionToModelViewerOrbit(direction) {
+  const len = Math.hypot(direction.x, direction.y, direction.z) || 1;
+  const x = direction.x / len;
+  const y = direction.y / len;
+  const z = direction.z / len;
+  return {
+    theta: Math.atan2(x, z),
+    phi: Math.acos(clamp(y, -1, 1)),
+  };
+}
+
+function vectorOrZero(value) {
+  return value && Number.isFinite(value.x) && Number.isFinite(value.y) && Number.isFinite(value.z)
+    ? value
+    : { x: 0, y: 0, z: 0 };
+}
+
+function applyInitialModelViewerCamera(viewer, name) {
   const spec = cameraForScene(name);
-  const baseDist = maxDim / (2 * Math.tan(camera.fov * Math.PI / 360));
-  controls.target.set(
-    maxDim * spec.targetScale.x,
-    maxDim * spec.targetScale.y,
-    maxDim * spec.targetScale.z
-  );
-  camera.position.set(
-    controls.target.x + baseDist * spec.fitScale * spec.direction.x,
-    controls.target.y + baseDist * spec.fitScale * spec.direction.y,
-    controls.target.z + baseDist * spec.fitScale * spec.direction.z
-  );
-  setModelViewerLikeZoomLimits(controls, camera.position.distanceTo(controls.target));
-  camera.near = baseDist / 200;
-  camera.far = baseDist * 100;
-  camera.updateProjectionMatrix();
-  controls.update();
+  const dimensions = viewer.getDimensions ? viewer.getDimensions() : null;
+  const center = vectorOrZero(viewer.getBoundingBoxCenter ? viewer.getBoundingBoxCenter() : null);
+  const maxDim = Math.max(dimensions?.x || 0, dimensions?.y || 0, dimensions?.z || 0) || 1;
+  const fov = Number.isFinite(viewer.getFieldOfView?.())
+    ? viewer.getFieldOfView()
+    : MODEL_VIEWER_FOV_DEG;
+  const baseDist = maxDim / (2 * Math.tan(fov * Math.PI / 360));
+  const radius = Math.max(baseDist * spec.fitScale, 0.001);
+  const target = {
+    x: center.x + maxDim * spec.targetScale.x,
+    y: center.y + maxDim * spec.targetScale.y,
+    z: center.z + maxDim * spec.targetScale.z,
+  };
+  const orbit = directionToModelViewerOrbit(spec.direction);
+
+  viewer.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+  viewer.setAttribute('min-camera-orbit', `auto auto ${radius * MODEL_VIEWER_MIN_RADIUS_SCALE}m`);
+  viewer.setAttribute('max-camera-orbit', `auto auto ${radius * MODEL_VIEWER_MAX_RADIUS_SCALE}m`);
+  viewer.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${radius}m`;
+  if (viewer.resetTurntableRotation) viewer.resetTurntableRotation(0);
+  if (viewer.jumpCameraToGoal) viewer.jumpCameraToGoal();
 }
 
 function pretty(name) {
@@ -180,54 +203,86 @@ if (grid) {
   let thumbButtons = [];
 
   // ---- viewer state ---------------------------------------------------
-  const loader = new GLTFLoader();
-  const activeViewers = [];   // {renderer, scene, camera, controls, model, canvas}
-  const MAX_POINTS = 600000;  // budget per point cloud for fluid orbit
+  const activeOverlays = [];
+  const GLB_MAGIC = 0x46546c67;
+  const GLB_JSON_CHUNK_TYPE = 0x4e4f534a;
 
-  function downsamplePoints(root, maxN) {
-    let totalBefore = 0, totalAfter = 0;
-    root.traverse(c => {
-      if (!c.isPoints || !c.geometry?.attributes?.position) return;
-      const pos = c.geometry.attributes.position;
-      const n = pos.count;
-      totalBefore += n;
-      if (n <= maxN) { totalAfter += n; return; }
-      const stride = n / maxN;
-      const newPos = new Float32Array(maxN * 3);
-      for (let i = 0; i < maxN; i++) {
-        const s = Math.floor(i * stride);
-        newPos[i*3]   = pos.array[s*3];
-        newPos[i*3+1] = pos.array[s*3+1];
-        newPos[i*3+2] = pos.array[s*3+2];
-      }
-      c.geometry.setAttribute('position', new THREE.BufferAttribute(newPos, 3));
-      const col = c.geometry.attributes.color;
-      if (col) {
-        const Ctor = col.array.constructor;
-        const newCol = new Ctor(maxN * col.itemSize);
-        for (let i = 0; i < maxN; i++) {
-          const s = Math.floor(i * stride);
-          for (let j = 0; j < col.itemSize; j++) {
-            newCol[i*col.itemSize + j] = col.array[s*col.itemSize + j];
+  function concatChunks(chunks, length) {
+    const out = new Uint8Array(length);
+    let offset = 0;
+    for (const chunk of chunks) {
+      if (offset >= length) break;
+      const slice = chunk.subarray(0, Math.min(chunk.byteLength, length - offset));
+      out.set(slice, offset);
+      offset += slice.byteLength;
+    }
+    return out;
+  }
+
+  function parseGlbJsonBytes(bytes) {
+    if (bytes.byteLength < 20) throw new Error("Invalid GLB header");
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (view.getUint32(0, true) !== GLB_MAGIC) throw new Error("Expected GLB magic");
+    const jsonLength = view.getUint32(12, true);
+    const jsonType = view.getUint32(16, true);
+    if (jsonType !== GLB_JSON_CHUNK_TYPE) throw new Error("Expected GLB JSON chunk");
+    const jsonStart = 20;
+    const jsonEnd = jsonStart + jsonLength;
+    if (bytes.byteLength < jsonEnd) throw new Error("Incomplete GLB JSON chunk");
+    const jsonText = new TextDecoder("utf-8").decode(bytes.subarray(jsonStart, jsonEnd)).trim();
+    return JSON.parse(jsonText);
+  }
+
+  async function loadGlbJson(url, signal) {
+    const response = await fetch(url, { cache: "force-cache", signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.body) {
+      return parseGlbJsonBytes(new Uint8Array(await response.arrayBuffer()));
+    }
+
+    const reader = response.body.getReader();
+    const chunks = [];
+    let received = 0;
+    let jsonEnd = 0;
+
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.byteLength;
+
+        if (!jsonEnd && received >= 20) {
+          const header = concatChunks(chunks, 20);
+          const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
+          if (view.getUint32(0, true) !== GLB_MAGIC) throw new Error("Expected GLB magic");
+          if (view.getUint32(16, true) !== GLB_JSON_CHUNK_TYPE) {
+            throw new Error("Expected GLB JSON chunk");
           }
+          jsonEnd = 20 + view.getUint32(12, true);
         }
-        c.geometry.setAttribute('color',
-          new THREE.BufferAttribute(newCol, col.itemSize, col.normalized));
+
+        if (jsonEnd && received >= jsonEnd) {
+          const bytes = concatChunks(chunks, jsonEnd);
+          await reader.cancel();
+          return parseGlbJsonBytes(bytes);
+        }
       }
-      for (const k of Object.keys(c.geometry.attributes)) {
-        if (k !== 'position' && k !== 'color') c.geometry.deleteAttribute(k);
-      }
-      c.geometry.setIndex(null);
-      c.geometry.computeBoundingBox();
-      c.geometry.computeBoundingSphere();
-      totalAfter += maxN;
-    });
-    return { before: totalBefore, after: totalAfter };
+    } finally {
+      reader.releaseLock();
+    }
+
+    return parseGlbJsonBytes(concatChunks(chunks, received));
+  }
+
+  async function loadGlbExtras(url, signal) {
+    const json = await loadGlbJson(url, signal);
+    return json.extras || {};
   }
 
   function buildCamsViz(extras) {
     const flat = extras?.cam_from_worlds || [];
-    const N = extras?.frame_count || 0;
+    const N = Math.min(extras?.frame_count || 0, Math.floor(flat.length / 16));
     if (!flat.length || !N) return null;
     const positions = new Float32Array(N * 3);
     const colors    = new Float32Array(N * 3);
@@ -276,10 +331,8 @@ if (grid) {
     return g;
   }
 
-  function disposeModel(viewer) {
-    if (!viewer.model) return;
-    viewer.scene.remove(viewer.model);
-    viewer.model.traverse(c => {
+  function disposeObject3D(root) {
+    root.traverse(c => {
       if (c.geometry) c.geometry.dispose();
       if (c.material) {
         const mats = Array.isArray(c.material) ? c.material : [c.material];
@@ -289,90 +342,105 @@ if (grid) {
         });
       }
     });
-    viewer.model = null;
   }
 
-  function makeViewer(canvas) {
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  function syncOverlayCamera(modelViewer, camera, canvas) {
+    let orbit, target, fov;
+    try {
+      orbit = modelViewer.getCameraOrbit();
+      target = vectorOrZero(modelViewer.getCameraTarget ? modelViewer.getCameraTarget() : null);
+      fov = modelViewer.getFieldOfView ? modelViewer.getFieldOfView() : MODEL_VIEWER_FOV_DEG;
+    } catch (_) {
+      return false;
+    }
+
+    if (!orbit || !Number.isFinite(orbit.radius) || orbit.radius <= 0) return false;
+    const rect = canvas.getBoundingClientRect();
+    const aspect = rect.width > 0 && rect.height > 0 ? rect.width / rect.height : 1;
+    const sinPhi = Math.sin(orbit.phi);
+    camera.position.set(
+      target.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+      target.y + orbit.radius * Math.cos(orbit.phi),
+      target.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+    );
+    camera.up.set(0, 1, 0);
+    camera.lookAt(target.x, target.y, target.z);
+    camera.fov = Number.isFinite(fov) ? fov : MODEL_VIEWER_FOV_DEG;
+    camera.aspect = aspect;
+
+    const dimensions = modelViewer.getDimensions ? modelViewer.getDimensions() : null;
+    const maxDim = Math.max(dimensions?.x || 0, dimensions?.y || 0, dimensions?.z || 0, orbit.radius, 1);
+    camera.near = Math.max(maxDim / 10000, 0.0001);
+    camera.far = Math.max(maxDim * 100, orbit.radius * 10, 1000);
+    camera.updateProjectionMatrix();
+    return true;
+  }
+
+  function createTrajectoryOverlay(canvas, modelViewer) {
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000, 0);
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf5f5f5);
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 2000);
-    camera.position.set(2, 1.2, 3);
-    const controls = new OrbitControls(camera, canvas);
-    configureModelViewerLikeControls(controls, THREE, { allowPagePanY: true });
-    scene.add(new THREE.AmbientLight(0xffffff, 1.6));
-    const d1 = new THREE.DirectionalLight(0xffffff, 1.6); d1.position.set( 5, 8,  5); scene.add(d1);
-    const d2 = new THREE.DirectionalLight(0xffffff, 0.9); d2.position.set(-3, 4, -5); scene.add(d2);
-    return { canvas, renderer, scene, camera, controls, model: null, renderWidth: 0, renderHeight: 0 };
-  }
+    const camera = new THREE.PerspectiveCamera(MODEL_VIEWER_FOV_DEG, 1, 0.0001, 1000);
+    const abortController = new AbortController();
+    let trajectory = null;
+    let disposed = false;
+    let frameId = 0;
+    let renderWidth = 0;
+    let renderHeight = 0;
+    let loading = false;
 
-  function loadGlbIntoViewer(viewer, url, statusEl, name) {
-    return new Promise((resolve) => {
-      if (statusEl) statusEl.style.display = '';
-      loader.load(url, (gltf) => {
-        disposeModel(viewer);
-        viewer.model = gltf.scene;
-        viewer.scene.add(viewer.model);
-        downsamplePoints(viewer.model, MAX_POINTS);
-        const extras = gltf.parser?.json?.extras || {};
-        const camsViz = buildCamsViz(extras);
-        if (camsViz) viewer.model.add(camsViz);
-
-        // center + frame
-        const box  = new THREE.Box3().setFromObject(viewer.model);
-        const sz   = box.getSize(new THREE.Vector3());
-        const ctr  = box.getCenter(new THREE.Vector3());
-        viewer.model.position.sub(ctr);
-        const maxDim = Math.max(sz.x, sz.y, sz.z) || 1;
-        applyInitialCamera(viewer.camera, viewer.controls, maxDim, name);
-
-        if (statusEl) {
-          statusEl.textContent = '';
-          statusEl.style.display = 'none';
-        }
-        resolve(viewer);
-      },
-      (p) => {
-        if (statusEl && p.total) {
-          statusEl.style.display = '';
-          statusEl.textContent = `Loading… ${Math.round(p.loaded / p.total * 100)}%`;
-        } else if (statusEl) {
-          statusEl.style.display = '';
-          statusEl.textContent = `Loading… ${(p.loaded / 1e6).toFixed(1)} MB`;
-        }
-      },
-      (err) => {
-        console.warn('GLB load failed', url, err);
-        if (statusEl) {
-          statusEl.style.display = '';
-          statusEl.textContent = 'Failed to load 3D scene';
-        }
-        resolve(null);
-      });
-    });
-  }
-
-  // Shared animation loop runs every active viewer.
-  function tick() {
-    requestAnimationFrame(tick);
-    for (const v of activeViewers) {
-      v.controls.update();
-      const r = v.canvas.getBoundingClientRect();
-      if (r.width <= 0 || r.height <= 0) continue;
-      const w = Math.floor(r.width), h = Math.floor(r.height);
-      if (v.renderWidth !== w || v.renderHeight !== h) {
-        v.renderWidth = w;
-        v.renderHeight = h;
-        v.renderer.setSize(w, h, false);
-        v.camera.aspect = w / h;
-        v.camera.updateProjectionMatrix();
+    function tick() {
+      if (disposed) return;
+      frameId = requestAnimationFrame(tick);
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      const width = Math.floor(rect.width);
+      const height = Math.floor(rect.height);
+      if (renderWidth !== width || renderHeight !== height) {
+        renderWidth = width;
+        renderHeight = height;
+        renderer.setSize(width, height, false);
       }
-      v.renderer.render(v.scene, v.camera);
+      if (syncOverlayCamera(modelViewer, camera, canvas)) {
+        renderer.render(scene, camera);
+      }
     }
+
+    function load(url) {
+      if (loading || disposed) return;
+      loading = true;
+      loadGlbExtras(url, abortController.signal)
+        .then((extras) => {
+          if (disposed) return;
+          trajectory = buildCamsViz(extras);
+          if (trajectory) scene.add(trajectory);
+        })
+        .catch((error) => {
+          if (error?.name !== "AbortError") {
+            console.warn("Camera trajectory load failed", url, error);
+          }
+        });
+    }
+
+    tick();
+
+    return {
+      load,
+      dispose() {
+        disposed = true;
+        if (frameId) cancelAnimationFrame(frameId);
+        abortController.abort();
+        if (trajectory) {
+          scene.remove(trajectory);
+          disposeObject3D(trajectory);
+          trajectory = null;
+        }
+        renderer.dispose();
+      },
+    };
   }
-  tick();
 
   // ---- row factory ----------------------------------------------------
   function makeRow(name, isPortrait) {
@@ -451,16 +519,35 @@ if (grid) {
     vPanel.appendChild(v);
     panels.appendChild(vPanel);
 
-    // RIGHT: GLB viewer — auto-loaded with the 1M-point downsampled GLB.
-    //         Has a "Full point cloud" toggle to swap in the original.
+    // RIGHT: GLB viewer — model-viewer handles the point cloud; the transparent
+    // canvas on top only draws the camera trajectory from GLB extras.
     const viewPanel = document.createElement("div");
     viewPanel.className = "row-viewer active";
     viewPanel.dataset.name = name;
     viewPanel.dataset.tier = "1m";
 
-    const canvas = document.createElement("canvas");
-    canvas.className = "viewer-canvas";
-    viewPanel.appendChild(canvas);
+    const glbUrl = glbPath1M(name);
+
+    const modelViewer = document.createElement("model-viewer");
+    modelViewer.className = "viewer-model";
+    modelViewer.setAttribute("loading", "eager");
+    modelViewer.setAttribute("touch-action", "pan-y");
+    modelViewer.setAttribute("environment-image", "legacy");
+    modelViewer.setAttribute("zoom-sensitivity", "0.2");
+    modelViewer.setAttribute("field-of-view", `${MODEL_VIEWER_FOV_DEG}deg`);
+    modelViewer.setAttribute("camera-controls", "");
+    modelViewer.setAttribute("disable-tap", "");
+    modelViewer.setAttribute("interaction-prompt", "none");
+    modelViewer.setAttribute("shadow-intensity", "0");
+    modelViewer.setAttribute("min-camera-orbit", `auto auto ${MODEL_VIEWER_MIN_RADIUS_SCALE * 100}%`);
+    modelViewer.setAttribute("max-camera-orbit", `auto auto ${MODEL_VIEWER_MAX_RADIUS_SCALE * 100}%`);
+    modelViewer.setAttribute("src", glbUrl);
+    viewPanel.appendChild(modelViewer);
+
+    const trajectoryCanvas = document.createElement("canvas");
+    trajectoryCanvas.className = "viewer-trajectory-canvas";
+    trajectoryCanvas.setAttribute("aria-hidden", "true");
+    viewPanel.appendChild(trajectoryCanvas);
 
     const status = document.createElement("div");
     status.className = "viewer-status";
@@ -484,10 +571,30 @@ if (grid) {
     toolbar.appendChild(openBtn);
     viewPanel.appendChild(toolbar);
 
-    // Build the viewer and start loading the 1M GLB right away.
-    const viewer = makeViewer(canvas);
-    activeViewers.push(viewer);
-    loadGlbIntoViewer(viewer, glbPath1M(name), status, name);
+    const overlay = createTrajectoryOverlay(trajectoryCanvas, modelViewer);
+    activeOverlays.push(overlay);
+
+    modelViewer.addEventListener("progress", (event) => {
+      const progress = event.detail?.totalProgress;
+      if (!Number.isFinite(progress) || progress >= 1) return;
+      status.classList.remove("error");
+      status.style.display = "";
+      status.textContent = `Loading… ${Math.round(progress * 100)}%`;
+    });
+    modelViewer.addEventListener("load", () => {
+      requestAnimationFrame(() => {
+        if (!modelViewer.isConnected) return;
+        applyInitialModelViewerCamera(modelViewer, name);
+        overlay.load(glbUrl);
+        status.textContent = "";
+        status.style.display = "none";
+      });
+    });
+    modelViewer.addEventListener("error", () => {
+      status.classList.add("error");
+      status.style.display = "";
+      status.textContent = "Failed to load 3D scene";
+    });
 
     panels.appendChild(viewPanel);
     return row;
@@ -587,15 +694,18 @@ if (grid) {
     page = Math.max(0, Math.min(page, TOTAL_PAGES - 1));
     currentPage = page;
 
-    // tear down current page: stop videos, dispose viewers
+    // tear down current page: stop videos, stop model-viewer fetches, dispose overlays
     grid.querySelectorAll("video").forEach((vid) => {
       try { vid.pause(); } catch (_) {}
       vid.removeAttribute("src");
       vid.load();
     });
-    while (activeViewers.length) {
-      const v = activeViewers.pop();
-      try { disposeModel(v); v.controls.dispose(); v.renderer.dispose(); } catch (_) {}
+    grid.querySelectorAll("model-viewer").forEach((viewer) => {
+      try { viewer.removeAttribute("src"); } catch (_) {}
+    });
+    while (activeOverlays.length) {
+      const overlay = activeOverlays.pop();
+      try { overlay.dispose(); } catch (_) {}
     }
     portraitVideoLayouts.clear();
     grid.innerHTML = "";

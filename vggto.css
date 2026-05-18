@@ -440,16 +440,25 @@ figure.image figcaption {
   cursor: grab;
 }
 .row-viewer:active { cursor: grabbing; }
-.viewer-canvas {
+.viewer-model,
+.viewer-trajectory-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
 }
+.viewer-model {
+  background: #ffffff;
+}
+.viewer-trajectory-canvas {
+  pointer-events: none;
+  z-index: 2;
+}
 .viewer-status {
   position: absolute;
   top: 50%; left: 50%;
+  z-index: 4;
   transform: translate(-50%, -50%);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 11px;
