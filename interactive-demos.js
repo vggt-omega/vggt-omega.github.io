@@ -1,13 +1,14 @@
 const MODEL_VIEWER_FOV_DEG = 45;
 const MODEL_VIEWER_MIN_RADIUS_SCALE = 0.5;
 const MODEL_VIEWER_MAX_RADIUS_SCALE = 3.5;
-const CAMERA_VIEWS_VER = "views3";
+const CAMERA_VIEWS_VER = "views6";
 const GLB_MAGIC = 0x46546c67;
 const GLB_JSON_CHUNK_TYPE = 0x4e4f534a;
 const DEFAULT_CAMERA_VIEW = {
   direction: { x: -0.210258, y: 0.179858, z: 0.960959 },
   targetScale: { x: 0, y: 0, z: 0 },
   fitScale: 2.261559,
+  fieldOfView: MODEL_VIEWER_FOV_DEG,
 };
 let cameraViews = {
   default: DEFAULT_CAMERA_VIEW,
@@ -57,6 +58,8 @@ function normalizeCameraSpec(spec, fallback = DEFAULT_CAMERA_VIEW) {
     targetScale: numericVector(spec.targetScale || spec.targetScaleVsMaxDim, fallback.targetScale),
     fitScale: Number.isFinite(spec.fitScale) ? spec.fitScale :
       (Number.isFinite(spec.fitScaleVsBase) ? spec.fitScaleVsBase : fallback.fitScale),
+    fieldOfView: Number.isFinite(spec.fieldOfView) ? spec.fieldOfView :
+      (Number.isFinite(fallback.fieldOfView) ? fallback.fieldOfView : MODEL_VIEWER_FOV_DEG),
   };
 }
 
@@ -101,9 +104,7 @@ function applyInitialModelViewerCamera(viewer, sceneName) {
   const dimensions = viewer.getDimensions ? viewer.getDimensions() : null;
   const center = vectorOrZero(viewer.getBoundingBoxCenter ? viewer.getBoundingBoxCenter() : null);
   const maxDim = Math.max(dimensions?.x || 0, dimensions?.y || 0, dimensions?.z || 0) || 1;
-  const fov = Number.isFinite(viewer.getFieldOfView?.())
-    ? viewer.getFieldOfView()
-    : MODEL_VIEWER_FOV_DEG;
+  const fov = Number.isFinite(spec.fieldOfView) ? spec.fieldOfView : MODEL_VIEWER_FOV_DEG;
   const baseDist = maxDim / (2 * Math.tan(fov * Math.PI / 360));
   const radius = Math.max(baseDist * spec.fitScale, 0.001);
   const target = {
@@ -113,6 +114,7 @@ function applyInitialModelViewerCamera(viewer, sceneName) {
   };
   const orbit = directionToModelViewerOrbit(spec.direction);
 
+  viewer.setAttribute("field-of-view", `${fov}deg`);
   viewer.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
   viewer.setAttribute("min-camera-orbit", `auto auto ${radius * MODEL_VIEWER_MIN_RADIUS_SCALE}m`);
   viewer.setAttribute("max-camera-orbit", `auto auto ${radius * MODEL_VIEWER_MAX_RADIUS_SCALE}m`);
@@ -125,6 +127,8 @@ function prepareModelViewerCameraAngles(viewer, sceneName) {
   if (!viewer) return;
   const spec = cameraForScene(sceneName);
   const orbit = directionToModelViewerOrbit(spec.direction);
+  const fov = Number.isFinite(spec.fieldOfView) ? spec.fieldOfView : MODEL_VIEWER_FOV_DEG;
+  viewer.setAttribute("field-of-view", `${fov}deg`);
   viewer.removeAttribute("camera-target");
   viewer.setAttribute("camera-orbit", `${orbit.theta}rad ${orbit.phi}rad auto`);
   viewer.setAttribute("min-camera-orbit", `auto auto ${MODEL_VIEWER_MIN_RADIUS_SCALE * 100}%`);

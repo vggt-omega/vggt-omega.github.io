@@ -10,7 +10,8 @@
       "y": 0.0,
       "z": 0.0
     },
-    "fitScale": 2.261559
+    "fitScale": 2.261559,
+    "fieldOfView": 45
   },
   "scenes": {
     "underwater": {
@@ -25,6 +26,20 @@
         "z": 0.0
       },
       "fitScale": 1.601038
+    },
+    "boat": {
+      "direction": {
+        "x": 0.151765,
+        "y": 0.865462,
+        "z": 0.477434
+      },
+      "targetScale": {
+        "x": 0.047096,
+        "y": 0.058637,
+        "z": 0.127156
+      },
+      "fitScale": 0.861061,
+      "fieldOfView": 26.433168
     },
     "drone_tree": {
       "direction": {

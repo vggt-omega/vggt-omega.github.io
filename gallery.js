@@ -11,7 +11,7 @@ const NAMES = [
   "znz_20260430_11_fps3",
   "znz_20260430_18",
   "3747862_uhd",
-  "boat_sailing__speedboat_motor__18031863",
+  // "boat_sailing__speedboat_motor__18031863",
   "DE62PUU1FZg_0018150_0019950_seg0-1025",
   "dyz_20260430_15",
   "loop_closure__temple_castle__31996068_fps4",
