@@ -56,7 +56,7 @@ function normalizeCameraSpec(spec, fallback = DEFAULT_CAMERA_VIEW) {
 
 async function loadCameraViews() {
   try {
-    const response = await fetch(`./interactive-camera-views.json?${CAMERA_VIEWS_VER}`, { cache: "no-store" });
+    const response = await fetch(`./interactive-camera-views.json?${CAMERA_VIEWS_VER}`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     const defaultSpec = normalizeCameraSpec(data.default, DEFAULT_CAMERA_VIEW);
@@ -115,10 +115,28 @@ function applyInitialModelViewerCamera(viewer, sceneName) {
   if (viewer.jumpCameraToGoal) viewer.jumpCameraToGoal();
 }
 
+function prepareModelViewerCameraAngles(viewer, sceneName) {
+  if (!viewer) return;
+  const spec = cameraForScene(sceneName);
+  const orbit = directionToModelViewerOrbit(spec.direction);
+  viewer.removeAttribute("camera-target");
+  viewer.setAttribute("camera-orbit", `${orbit.theta}rad ${orbit.phi}rad auto`);
+  viewer.setAttribute("min-camera-orbit", `auto auto ${MODEL_VIEWER_MIN_RADIUS_SCALE * 100}%`);
+  viewer.setAttribute("max-camera-orbit", `auto auto ${MODEL_VIEWER_MAX_RADIUS_SCALE * 100}%`);
+}
+
 function vectorOrZero(value) {
   return value && Number.isFinite(value.x) && Number.isFinite(value.y) && Number.isFinite(value.z)
     ? value
     : { x: 0, y: 0, z: 0 };
+}
+
+function runWhenIdle(callback) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, { timeout: 1000 });
+  } else {
+    window.setTimeout(callback, 0);
+  }
 }
 
 function concatChunks(chunks, length) {
@@ -326,6 +344,10 @@ function createTrajectoryOverlay(canvas, modelViewer) {
     scene.remove(trajectory);
     disposeObject3D(trajectory);
     trajectory = null;
+    if (frameId) {
+      cancelAnimationFrame(frameId);
+      frameId = 0;
+    }
     renderer.clear();
   }
 
@@ -346,6 +368,10 @@ function createTrajectoryOverlay(canvas, modelViewer) {
     }
   }
 
+  function startTicking() {
+    if (!frameId) frameId = requestAnimationFrame(tick);
+  }
+
   function load(url) {
     if (!url || disposed) return;
     if (url === currentUrl && (loading || trajectory)) return;
@@ -362,7 +388,10 @@ function createTrajectoryOverlay(canvas, modelViewer) {
       .then((extras) => {
         if (disposed || token !== loadToken) return;
         trajectory = buildCamsViz(extras);
-        if (trajectory) scene.add(trajectory);
+        if (trajectory) {
+          scene.add(trajectory);
+          startTicking();
+        }
       })
       .catch((error) => {
         if (error?.name !== "AbortError") {
@@ -373,8 +402,6 @@ function createTrajectoryOverlay(canvas, modelViewer) {
         if (token === loadToken) loading = false;
       });
   }
-
-  tick();
 
   return {
     load,
@@ -392,12 +419,26 @@ function initInteractiveDemos() {
   const viewer = document.getElementById("interactiveDemoViewer");
   const canvas = document.getElementById("interactiveDemoTrajectory");
   const status = document.getElementById("interactiveDemoStatus");
+  const stage = viewer?.closest(".interactive-demo-stage");
   const thumbs = Array.from(document.querySelectorAll("#interactiveDemoThumbs video"));
   if (!viewer || thumbs.length === 0) return;
 
   const overlay = canvas ? createTrajectoryOverlay(canvas, viewer) : null;
   let activeGlb = "";
   let activeScene = "";
+  let cameraToken = 0;
+
+  function setCameraPending(pending) {
+    stage?.classList.toggle("model-viewer-camera-pending", pending);
+    viewer.classList.toggle("model-viewer-camera-pending", pending);
+    canvas?.classList.toggle("model-viewer-camera-pending", pending);
+  }
+
+  function hideLoading() {
+    if (!status) return;
+    status.textContent = "";
+    status.style.display = "none";
+  }
 
   function showLoading() {
     if (!status) return;
@@ -424,16 +465,16 @@ function initInteractiveDemos() {
     });
 
     const nextSrc = new URL(glb, window.location.href).href;
-    overlay?.load(nextSrc);
     if (viewer.src !== nextSrc && viewer.getAttribute("src") !== glb) {
+      cameraToken += 1;
+      setCameraPending(true);
       showLoading();
-      viewer.setAttribute("camera-orbit", "180deg 70deg auto");
-      viewer.setAttribute("min-camera-orbit", `auto auto ${MODEL_VIEWER_MIN_RADIUS_SCALE * 100}%`);
-      viewer.setAttribute("max-camera-orbit", `auto auto ${MODEL_VIEWER_MAX_RADIUS_SCALE * 100}%`);
-      viewer.removeAttribute("src");
+      prepareModelViewerCameraAngles(viewer, activeScene);
       viewer.setAttribute("src", glb);
     } else {
       applyInitialModelViewerCamera(viewer, activeScene);
+      setCameraPending(false);
+      hideLoading();
     }
   }
 
@@ -445,14 +486,25 @@ function initInteractiveDemos() {
     status.textContent = `Loading... ${Math.round(progress * 100)}%`;
   });
   viewer.addEventListener("load", () => {
-    if (status) {
-      status.textContent = "";
-      status.style.display = "none";
-    }
+    const token = cameraToken;
     try { applyInitialModelViewerCamera(viewer, activeScene); } catch (_) {}
-    if (activeGlb) {
-      overlay?.load(new URL(activeGlb, window.location.href).href);
-    }
+    Promise.resolve(viewer.updateComplete).catch(() => {}).then(() => {
+      window.requestAnimationFrame(() => {
+        if (token !== cameraToken) return;
+        try { applyInitialModelViewerCamera(viewer, activeScene); } catch (_) {}
+        window.requestAnimationFrame(() => {
+          if (token !== cameraToken) return;
+          setCameraPending(false);
+          hideLoading();
+          if (activeGlb) {
+            const url = new URL(activeGlb, window.location.href).href;
+            runWhenIdle(() => {
+              if (token === cameraToken) overlay?.load(url);
+            });
+          }
+        });
+      });
+    });
   });
   viewer.addEventListener("error", () => {
     if (!status) return;

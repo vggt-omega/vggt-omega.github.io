@@ -460,10 +460,20 @@ figure.image figcaption {
 }
 .viewer-model {
   background: #ffffff;
+  opacity: 1;
+  transition: opacity .12s ease;
 }
 .viewer-trajectory-canvas {
   pointer-events: none;
   z-index: 2;
+  opacity: 1;
+  transition: opacity .12s ease;
+}
+.row-viewer.model-viewer-camera-pending .viewer-model,
+.row-viewer .viewer-model.model-viewer-camera-pending,
+.row-viewer.model-viewer-camera-pending .viewer-trajectory-canvas,
+.row-viewer .viewer-trajectory-canvas.model-viewer-camera-pending {
+  opacity: 0;
 }
 .viewer-status {
   position: absolute;
@@ -617,6 +627,12 @@ figure.image figcaption {
   height: 100%;
   display: block;
   background: #ffffff;
+  opacity: 1;
+  transition: opacity .12s ease;
+}
+.comparison-model-wrapper.model-viewer-camera-pending model-viewer,
+.comparison-model-wrapper model-viewer.model-viewer-camera-pending {
+  opacity: 0;
 }
 .comparison-model-label {
   position: absolute;
@@ -693,6 +709,8 @@ figure.image figcaption {
   height: 100%;
   display: block;
   background: #ffffff;
+  opacity: 1;
+  transition: opacity .12s ease;
 }
 .interactive-demo-trajectory-canvas {
   position: absolute;
@@ -702,6 +720,14 @@ figure.image figcaption {
   height: 100%;
   display: block;
   pointer-events: none;
+  opacity: 1;
+  transition: opacity .12s ease;
+}
+.interactive-demo-stage.model-viewer-camera-pending model-viewer,
+.interactive-demo-stage model-viewer.model-viewer-camera-pending,
+.interactive-demo-stage.model-viewer-camera-pending .interactive-demo-trajectory-canvas,
+.interactive-demo-trajectory-canvas.model-viewer-camera-pending {
+  opacity: 0;
 }
 .interactive-demo-status {
   position: absolute; top: 50%; left: 50%;

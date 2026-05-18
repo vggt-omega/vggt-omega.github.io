@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="stylesheet" href="./vggto.css?v=interactive-demos-3">
+  <link rel="stylesheet" href="./vggto.css?v=camera-pending-2">
   <link rel="icon" type="image/svg+xml" href="./assets/img/favicon.svg">
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -230,7 +230,7 @@
     <div class="interactive-demo-stage">
       <model-viewer id="interactiveDemoViewer"
         alt="3D reconstruction"
-        loading="eager"
+        loading="lazy"
         touch-action="pan-y" environment-image="legacy"
         camera-orbit="180deg 70deg auto"
         zoom-sensitivity="0.2" field-of-view="45deg" camera-controls disable-tap
@@ -265,7 +265,7 @@
 
       <div class="comparison-model-wrapper">
         <div class="comparison-model-label">VGGT-Ω</div>
-        <model-viewer id="comparisonOmegaViewer" loading="eager"
+        <model-viewer id="comparisonOmegaViewer" loading="lazy"
           touch-action="pan-y" environment-image="legacy"
           zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 50%"
           max-camera-orbit="auto auto 350%" interaction-prompt="none" shadow-intensity="0" ar>
@@ -274,7 +274,7 @@
 
       <div class="comparison-model-wrapper">
         <div class="comparison-model-label">Depth Anything 3</div>
-        <model-viewer id="comparisonDa3Viewer" loading="eager"
+        <model-viewer id="comparisonDa3Viewer" loading="lazy"
           touch-action="pan-y" environment-image="legacy"
           zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 50%"
           max-camera-orbit="auto auto 350%" interaction-prompt="none" shadow-intensity="0" ar>
@@ -813,6 +813,35 @@
       return true;
     }
 
+    function setViewerCameraPending(key, pending) {
+      const viewer = viewers[key];
+      if (!viewer) return;
+      viewer.classList.toggle('model-viewer-camera-pending', pending);
+      viewer.closest('.comparison-model-wrapper')?.classList.toggle('model-viewer-camera-pending', pending);
+    }
+
+    function revealViewerAfterCameraSettles(key, camera, token) {
+      const viewer = viewers[key];
+      if (!viewer || token !== loadToken) return;
+      window.requestAnimationFrame(() => {
+        if (token !== loadToken || !cameraMatches(key, camera)) return;
+        window.requestAnimationFrame(() => {
+          if (token === loadToken && cameraMatches(key, camera)) {
+            setViewerCameraPending(key, false);
+          }
+        });
+      });
+    }
+
+    function revealViewerAfterCameraAttempt(key, token) {
+      if (token !== loadToken) return;
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          if (token === loadToken) setViewerCameraPending(key, false);
+        });
+      });
+    }
+
     function cameraMatches(key, camera) {
       const viewer = viewers[key];
       const autoOrbit = autoOrbits[key];
@@ -840,22 +869,28 @@
         if (token !== loadToken) return;
         frames += 1;
         applyCamera(key, camera);
-        if (cameraMatches(key, camera)) return;
+        if (cameraMatches(key, camera)) {
+          revealViewerAfterCameraSettles(key, camera, token);
+          return;
+        }
         if (frames < 120 && performance.now() - startedAt < 2400) {
           window.requestAnimationFrame(tick);
+        } else {
+          revealViewerAfterCameraAttempt(key, token);
         }
       };
       tick();
     }
 
-    function setViewerSource(key, src) {
+    function setViewerSource(key, src, camera) {
       const viewer = viewers[key];
       if (!viewer) return;
+      setViewerCameraPending(key, true);
       viewer.setAttribute('min-camera-orbit', `auto auto ${viewerMinRadiusScale * 100}%`);
       viewer.setAttribute('max-camera-orbit', `auto auto ${viewerMaxRadiusScale * 100}%`);
       viewer.removeAttribute('camera-target');
-      viewer.setAttribute('camera-orbit', `${defaultComparisonCamera.theta}rad ${defaultComparisonCamera.phi}rad auto`);
-      viewer.removeAttribute('src');
+      const initialCamera = camera || defaultComparisonCamera;
+      viewer.setAttribute('camera-orbit', `${initialCamera.theta}rad ${initialCamera.phi}rad auto`);
       viewer.setAttribute('src', src);
     }
 
@@ -887,13 +922,24 @@
     }
 
     function setExample(index) {
-      activeIndex = (index + examples.length) % examples.length;
-      const example = examples[activeIndex];
+      const nextIndex = (index + examples.length) % examples.length;
+      const example = examples[nextIndex];
+      const alreadyActive = nextIndex === activeIndex &&
+        omegaViewer.getAttribute('src') === example.omega &&
+        da3Viewer.getAttribute('src') === example.da3;
+      if (alreadyActive) {
+        buttons.forEach((button, buttonIndex) => {
+          button.classList.toggle('active', buttonIndex === activeIndex);
+          button.setAttribute('aria-pressed', String(buttonIndex === activeIndex));
+        });
+        return;
+      }
+      activeIndex = nextIndex;
       loadToken += 1;
       autoOrbits.omega = null;
       autoOrbits.da3 = null;
-      setViewerSource('omega', example.omega);
-      setViewerSource('da3', example.da3);
+      setViewerSource('omega', example.omega, cameraFor(example, 'omega'));
+      setViewerSource('da3', example.da3, cameraFor(example, 'da3'));
 
       buttons.forEach((button, buttonIndex) => {
         const active = buttonIndex === activeIndex;
@@ -965,7 +1011,7 @@
   }
 })();
 </script>
-<script type="module" src="./interactive-demos.js?v=camera-views-2"></script>
-<script type="module" src="./gallery.js?v=no-full-viewer-1"></script>
+<script type="module" src="./interactive-demos.js?v=load-cleanup-2"></script>
+<script type="module" src="./gallery.js?v=load-cleanup-2"></script>
 </body>
 </html>

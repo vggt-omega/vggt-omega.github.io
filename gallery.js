@@ -123,7 +123,7 @@ function normalizeCameraSpec(spec, fallback = DEFAULT_THREE_CAMERA) {
 
 async function loadCameraViews() {
   try {
-    const response = await fetch(`./camera-views.json?${CAMERA_VIEWS_VER}`, { cache: "no-store" });
+    const response = await fetch(`./camera-views.json?${CAMERA_VIEWS_VER}`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     const defaultSpec = normalizeCameraSpec(data.default, DEFAULT_THREE_CAMERA);
@@ -162,6 +162,14 @@ function vectorOrZero(value) {
     : { x: 0, y: 0, z: 0 };
 }
 
+function runWhenIdle(callback) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, { timeout: 1000 });
+  } else {
+    window.setTimeout(callback, 0);
+  }
+}
+
 function applyInitialModelViewerCamera(viewer, name) {
   const spec = cameraForScene(name);
   const dimensions = viewer.getDimensions ? viewer.getDimensions() : null;
@@ -185,6 +193,16 @@ function applyInitialModelViewerCamera(viewer, name) {
   viewer.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${radius}m`;
   if (viewer.resetTurntableRotation) viewer.resetTurntableRotation(0);
   if (viewer.jumpCameraToGoal) viewer.jumpCameraToGoal();
+}
+
+function prepareModelViewerCameraAngles(viewer, name) {
+  if (!viewer) return;
+  const spec = cameraForScene(name);
+  const orbit = directionToModelViewerOrbit(spec.direction);
+  viewer.removeAttribute('camera-target');
+  viewer.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad auto`);
+  viewer.setAttribute('min-camera-orbit', `auto auto ${MODEL_VIEWER_MIN_RADIUS_SCALE * 100}%`);
+  viewer.setAttribute('max-camera-orbit', `auto auto ${MODEL_VIEWER_MAX_RADIUS_SCALE * 100}%`);
 }
 
 function pretty(name) {
@@ -390,6 +408,7 @@ if (grid) {
     let renderWidth = 0;
     let renderHeight = 0;
     let loading = false;
+    let loadedUrl = "";
 
     function tick() {
       if (disposed) return;
@@ -408,23 +427,32 @@ if (grid) {
       }
     }
 
+    function startTicking() {
+      if (!frameId) frameId = requestAnimationFrame(tick);
+    }
+
     function load(url) {
-      if (loading || disposed) return;
+      if (!url || disposed || loading || loadedUrl === url) return;
       loading = true;
       loadGlbExtras(url, abortController.signal)
         .then((extras) => {
           if (disposed) return;
+          loadedUrl = url;
           trajectory = buildCamsViz(extras);
-          if (trajectory) scene.add(trajectory);
+          if (trajectory) {
+            scene.add(trajectory);
+            startTicking();
+          }
         })
         .catch((error) => {
           if (error?.name !== "AbortError") {
             console.warn("Camera trajectory load failed", url, error);
           }
+        })
+        .finally(() => {
+          loading = false;
         });
     }
-
-    tick();
 
     return {
       load,
@@ -522,15 +550,27 @@ if (grid) {
     // BOTTOM: interactive GLB viewer; model-viewer handles the point cloud, and the transparent
     // canvas on top only draws the camera trajectory from GLB extras.
     const viewPanel = document.createElement("div");
-    viewPanel.className = "row-viewer active";
+    viewPanel.className = "row-viewer active model-viewer-camera-pending";
     viewPanel.dataset.name = name;
     viewPanel.dataset.tier = "1m";
 
     const glbUrl = glbPath1M(name);
+    let cameraToken = 0;
+
+    function setCameraPending(pending) {
+      viewPanel.classList.toggle("model-viewer-camera-pending", pending);
+      modelViewer.classList.toggle("model-viewer-camera-pending", pending);
+      trajectoryCanvas.classList.toggle("model-viewer-camera-pending", pending);
+    }
+
+    function hideStatus() {
+      status.textContent = "";
+      status.style.display = "none";
+    }
 
     const modelViewer = document.createElement("model-viewer");
     modelViewer.className = "viewer-model";
-    modelViewer.setAttribute("loading", "eager");
+    modelViewer.setAttribute("loading", "lazy");
     modelViewer.setAttribute("touch-action", "pan-y");
     modelViewer.setAttribute("environment-image", "legacy");
     modelViewer.setAttribute("zoom-sensitivity", "0.2");
@@ -541,6 +581,7 @@ if (grid) {
     modelViewer.setAttribute("shadow-intensity", "0");
     modelViewer.setAttribute("min-camera-orbit", `auto auto ${MODEL_VIEWER_MIN_RADIUS_SCALE * 100}%`);
     modelViewer.setAttribute("max-camera-orbit", `auto auto ${MODEL_VIEWER_MAX_RADIUS_SCALE * 100}%`);
+    prepareModelViewerCameraAngles(modelViewer, name);
     modelViewer.setAttribute("src", glbUrl);
     viewPanel.appendChild(modelViewer);
 
@@ -565,15 +606,25 @@ if (grid) {
       status.textContent = `Loading… ${Math.round(progress * 100)}%`;
     });
     modelViewer.addEventListener("load", () => {
-      requestAnimationFrame(() => {
-        if (!modelViewer.isConnected) return;
-        applyInitialModelViewerCamera(modelViewer, name);
-        overlay.load(glbUrl);
-        status.textContent = "";
-        status.style.display = "none";
+      const token = ++cameraToken;
+      try { applyInitialModelViewerCamera(modelViewer, name); } catch (_) {}
+      Promise.resolve(modelViewer.updateComplete).catch(() => {}).then(() => {
+        requestAnimationFrame(() => {
+          if (!modelViewer.isConnected || token !== cameraToken) return;
+          try { applyInitialModelViewerCamera(modelViewer, name); } catch (_) {}
+          requestAnimationFrame(() => {
+            if (!modelViewer.isConnected || token !== cameraToken) return;
+            setCameraPending(false);
+            hideStatus();
+            runWhenIdle(() => {
+              if (modelViewer.isConnected && token === cameraToken) overlay.load(glbUrl);
+            });
+          });
+        });
       });
     });
     modelViewer.addEventListener("error", () => {
+      setCameraPending(false);
       status.classList.add("error");
       status.style.display = "";
       status.textContent = "Failed to load 3D scene";
@@ -675,6 +726,14 @@ if (grid) {
   // ---- example selection ---------------------------------------------
   function renderPage(page, opts) {
     page = Math.max(0, Math.min(page, TOTAL_PAGES - 1));
+    if (page === currentPage && grid.childElementCount > 0) {
+      renderExampleSelector();
+      if (opts && opts.scroll) {
+        const sec = document.getElementById("gallery");
+        if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      return;
+    }
     currentPage = page;
 
     // tear down current page: stop videos, stop model-viewer fetches, dispose overlays

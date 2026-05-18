@@ -159,7 +159,7 @@ function normalizeCameraSpec(spec, fallback = DEFAULT_THREE_CAMERA) {
 
 async function loadCameraViews() {
   try {
-    const response = await fetch(`./camera-views.json?${CAMERA_VIEWS_VER}`, { cache: "no-store" });
+    const response = await fetch(`./camera-views.json?${CAMERA_VIEWS_VER}`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     const defaultSpec = normalizeCameraSpec(data.default, DEFAULT_THREE_CAMERA);
