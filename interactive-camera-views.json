@@ -41,6 +41,20 @@
       "fitScale": 0.861061,
       "fieldOfView": 26.433168
     },
+    "robot": {
+      "direction": {
+        "x": -0.034201,
+        "y": -0.315967,
+        "z": 0.948154
+      },
+      "targetScale": {
+        "x": -0.113399,
+        "y": -0.199812,
+        "z": 0.519299
+      },
+      "fitScale": 0.874278,
+      "fieldOfView": 17.160661
+    },
     "drone_tree": {
       "direction": {
         "x": 0.330313,
@@ -56,6 +70,34 @@
     },
     "drone_far": {
       "fitScale": 1.632846
+    },
+    "concert": {
+      "direction": {
+        "x": -0.314838,
+        "y": 0.118535,
+        "z": -0.941715
+      },
+      "targetScale": {
+        "x": -0.251986,
+        "y": 0.016309,
+        "z": -0.547677
+      },
+      "fitScale": 0.856674,
+      "fieldOfView": 18.842797
+    },
+    "tunnel_moto": {
+      "direction": {
+        "x": -0.050708,
+        "y": 0.111114,
+        "z": 0.992513
+      },
+      "targetScale": {
+        "x": -0.024531,
+        "y": 0.029188,
+        "z": 0.48015
+      },
+      "fitScale": 0.510949,
+      "fieldOfView": 14.790682
     }
   }
 }
