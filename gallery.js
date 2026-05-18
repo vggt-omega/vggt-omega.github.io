@@ -8,6 +8,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import {
+  configureModelViewerLikeControls,
+  setModelViewerLikeZoomLimits,
+} from './three-viewer-controls.js?v=zoom-range-1';
 
 // Selected entries. Each name becomes its own selectable example.
 const NAMES = [
@@ -153,6 +157,7 @@ function applyInitialCamera(camera, controls, maxDim, name) {
     controls.target.y + baseDist * spec.fitScale * spec.direction.y,
     controls.target.z + baseDist * spec.fitScale * spec.direction.z
   );
+  setModelViewerLikeZoomLimits(controls, camera.position.distanceTo(controls.target));
   camera.near = baseDist / 200;
   camera.far = baseDist * 100;
   camera.updateProjectionMatrix();
@@ -296,12 +301,11 @@ if (grid) {
     const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 2000);
     camera.position.set(2, 1.2, 3);
     const controls = new OrbitControls(camera, canvas);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
+    configureModelViewerLikeControls(controls, THREE, { allowPagePanY: true });
     scene.add(new THREE.AmbientLight(0xffffff, 1.6));
     const d1 = new THREE.DirectionalLight(0xffffff, 1.6); d1.position.set( 5, 8,  5); scene.add(d1);
     const d2 = new THREE.DirectionalLight(0xffffff, 0.9); d2.position.set(-3, 4, -5); scene.add(d2);
-    return { canvas, renderer, scene, camera, controls, model: null };
+    return { canvas, renderer, scene, camera, controls, model: null, renderWidth: 0, renderHeight: 0 };
   }
 
   function loadGlbIntoViewer(viewer, url, statusEl, name) {
@@ -358,7 +362,9 @@ if (grid) {
       const r = v.canvas.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) continue;
       const w = Math.floor(r.width), h = Math.floor(r.height);
-      if (v.canvas.width !== w || v.canvas.height !== h) {
+      if (v.renderWidth !== w || v.renderHeight !== h) {
+        v.renderWidth = w;
+        v.renderHeight = h;
         v.renderer.setSize(w, h, false);
         v.camera.aspect = w / h;
         v.camera.updateProjectionMatrix();

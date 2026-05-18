@@ -114,6 +114,10 @@ header > * { pointer-events: auto; }
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import {
+  configureModelViewerLikeControls,
+  setModelViewerLikeZoomLimits,
+} from './three-viewer-controls.js?v=zoom-range-1';
 
 // ---- resolve which GLB to load --------------------------------------------
 const params = new URLSearchParams(location.search);
@@ -186,6 +190,7 @@ function applyInitialCamera(camera, controls, maxDim, sceneName) {
     controls.target.y + baseDist * spec.fitScale * spec.direction.y,
     controls.target.z + baseDist * spec.fitScale * spec.direction.z
   );
+  setModelViewerLikeZoomLimits(controls, camera.position.distanceTo(controls.target));
   camera.near = baseDist / 200;
   camera.far = baseDist * 100;
   camera.updateProjectionMatrix();
@@ -221,8 +226,7 @@ const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 5000);
 camera.position.set(2, 1.2, 3);
 
 const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
+configureModelViewerLikeControls(controls, THREE);
 
 scene.add(new THREE.AmbientLight(0xffffff, 1.6));
 const d1 = new THREE.DirectionalLight(0xffffff, 1.6); d1.position.set(5,8,5);   scene.add(d1);
@@ -348,12 +352,17 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ---- render loop ---------------------------------------------------------
+let renderWidth = 0;
+let renderHeight = 0;
+
 function tick() {
   requestAnimationFrame(tick);
   controls.update();
   const r = canvas.getBoundingClientRect();
   const w = Math.floor(r.width), h = Math.floor(r.height);
-  if (canvas.width !== w || canvas.height !== h) {
+  if (renderWidth !== w || renderHeight !== h) {
+    renderWidth = w;
+    renderHeight = h;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();

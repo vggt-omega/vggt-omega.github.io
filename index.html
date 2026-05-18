@@ -237,8 +237,8 @@
         <model-viewer id="comparisonOmegaViewer" loading="eager"
           touch-action="pan-y" environment-image="legacy"
           src="./assets/comparison/snow_lift_omega.glb"
-          zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 1m"
-          max-camera-orbit="auto auto 80m" interaction-prompt="none" shadow-intensity="0" ar>
+          zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 50%"
+          max-camera-orbit="auto auto 350%" interaction-prompt="none" shadow-intensity="0" ar>
         </model-viewer>
       </div>
 
@@ -247,8 +247,8 @@
         <model-viewer id="comparisonDa3Viewer" loading="eager"
           touch-action="pan-y" environment-image="legacy"
           src="./assets/comparison/snow_lift_da3.glb"
-          zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 1m"
-          max-camera-orbit="auto auto 80m" interaction-prompt="none" shadow-intensity="0" ar>
+          zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 50%"
+          max-camera-orbit="auto auto 350%" interaction-prompt="none" shadow-intensity="0" ar>
         </model-viewer>
       </div>
     </div>
@@ -587,6 +587,8 @@
     phi: 70 * Math.PI / 180,
     radiusScale: 1,
   };
+  const viewerMinRadiusScale = 0.5;
+  const viewerMaxRadiusScale = 3.5;
   const examples = [
     {
       id: 'snow_lift',
@@ -700,11 +702,29 @@
       return Math.max(0.001, Math.min(Math.PI - 0.001, phi));
     }
 
+    function clampRadius(radius, baseRadius) {
+      if (!Number.isFinite(radius) || !Number.isFinite(baseRadius) || baseRadius <= 0) {
+        return radius;
+      }
+      return Math.max(
+        baseRadius * viewerMinRadiusScale,
+        Math.min(baseRadius * viewerMaxRadiusScale, radius)
+      );
+    }
+
+    function setComparisonZoomLimits(viewer, baseRadius) {
+      if (!viewer || !Number.isFinite(baseRadius) || baseRadius <= 0) return;
+      viewer.setAttribute('min-camera-orbit', `auto auto ${baseRadius * viewerMinRadiusScale}m`);
+      viewer.setAttribute('max-camera-orbit', `auto auto ${baseRadius * viewerMaxRadiusScale}m`);
+    }
+
     function applyCamera(key, camera) {
       const viewer = viewers[key];
       const autoOrbit = autoOrbits[key];
       if (!viewer || !camera || !autoOrbit) return;
-      viewer.cameraOrbit = `${camera.theta}rad ${camera.phi}rad ${autoOrbit.radius * camera.radiusScale}m`;
+      const baseRadius = autoOrbit.radius * camera.radiusScale;
+      setComparisonZoomLimits(viewer, baseRadius);
+      viewer.cameraOrbit = `${camera.theta}rad ${camera.phi}rad ${baseRadius}m`;
       if (viewer.resetTurntableRotation) viewer.resetTurntableRotation(0);
       if (viewer.jumpCameraToGoal) viewer.jumpCameraToGoal();
     }
@@ -712,6 +732,8 @@
     function setViewerSource(key, src) {
       const viewer = viewers[key];
       if (!viewer) return;
+      viewer.setAttribute('min-camera-orbit', `auto auto ${viewerMinRadiusScale * 100}%`);
+      viewer.setAttribute('max-camera-orbit', `auto auto ${viewerMaxRadiusScale * 100}%`);
       viewer.setAttribute('camera-orbit', `${defaultComparisonCamera.theta}rad ${defaultComparisonCamera.phi}rad auto`);
       viewer.removeAttribute('src');
       viewer.setAttribute('src', src);
@@ -763,7 +785,7 @@
         : 1;
       const targetTheta = targetInit.theta + deltaTheta;
       const targetPhi = clampPhi(targetInit.phi + deltaPhi);
-      const targetRadius = targetBaseRadius * relativeZoom;
+      const targetRadius = clampRadius(targetBaseRadius * relativeZoom, targetBaseRadius);
 
       syncingCamera = true;
       targetViewer.cameraOrbit = `${targetTheta}rad ${targetPhi}rad ${targetRadius}m`;
@@ -877,6 +899,6 @@
   }
 })();
 </script>
-<script type="module" src="./gallery.js?v=portrait-height-1p5"></script>
+<script type="module" src="./gallery.js?v=zoom-range-1"></script>
 </body>
 </html>
