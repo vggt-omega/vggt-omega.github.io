@@ -23,23 +23,26 @@
 }
 
 /* Page section spacing. */
+:root {
+  --vggto-section-padding-y: 2.25rem;
+}
 .hero .hero-body {
-  padding-bottom: 1.5rem;
+  padding-bottom: var(--vggto-section-padding-y);
 }
 .vggto-abstract {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
+  padding-top: var(--vggto-section-padding-y);
+  padding-bottom: var(--vggto-section-padding-y);
 }
 .vggto-takeaways {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
+  padding-top: var(--vggto-section-padding-y);
+  padding-bottom: var(--vggto-section-padding-y);
 }
 #gallery {
-  padding-top: 1.5rem;
+  padding-top: var(--vggto-section-padding-y);
 }
 .vggto-comparison {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
+  padding-top: var(--vggto-section-padding-y);
+  padding-bottom: var(--vggto-section-padding-y);
 }
 
 .vggto-venue {
@@ -52,8 +55,14 @@
 
 /* ---- Demo teaser ---- */
 .vggto-demo-teaser {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
+  padding-top: var(--vggto-section-padding-y);
+  padding-bottom: var(--vggto-section-padding-y);
+}
+.section .title:not(:last-child) {
+  margin-bottom: 2rem;
+}
+#Acknowledgements p {
+  font-size: 0.95rem;
 }
 .demo-teaser-container {
   container-type: inline-size;

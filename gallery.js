@@ -456,7 +456,7 @@ if (grid) {
     panels.className = "row-panels";
     row.appendChild(panels);
 
-    // LEFT: full composite (input | render orbit). Use native controls for
+    // TOP: full composite (input RGB | point-of-view render). Use native controls for
     // fullscreen / play / scrub — no custom click handler to avoid fighting
     // the default video UI.
     const vPanel = document.createElement("div");
@@ -519,7 +519,7 @@ if (grid) {
     vPanel.appendChild(v);
     panels.appendChild(vPanel);
 
-    // RIGHT: GLB viewer — model-viewer handles the point cloud; the transparent
+    // BOTTOM: interactive GLB viewer; model-viewer handles the point cloud, and the transparent
     // canvas on top only draws the camera trajectory from GLB extras.
     const viewPanel = document.createElement("div");
     viewPanel.className = "row-viewer active";
