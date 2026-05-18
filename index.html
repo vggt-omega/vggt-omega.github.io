@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="stylesheet" href="./vggto.css?v=no-full-viewer-1">
+  <link rel="stylesheet" href="./vggto.css?v=interactive-demos-3">
   <link rel="icon" type="image/svg+xml" href="./assets/img/favicon.svg">
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -221,6 +221,37 @@
 </section>
 
 <!-- ============================================================
+     INTERACTIVE DEMOS
+============================================================ -->
+<section class="section vggto-interactive-demos" id="interactive-demos">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Interactive Demos</h2>
+
+    <div class="interactive-demo-stage">
+      <model-viewer id="interactiveDemoViewer"
+        alt="3D reconstruction"
+        loading="eager"
+        touch-action="pan-y" environment-image="legacy"
+        camera-orbit="180deg 70deg auto"
+        zoom-sensitivity="0.2" field-of-view="45deg" camera-controls disable-tap
+        min-camera-orbit="auto auto 50%" max-camera-orbit="auto auto 350%"
+        interaction-prompt="none" shadow-intensity="0" ar
+        disable-shadow ar-modes="webxr scene-viewer quick-look">
+      </model-viewer>
+      <canvas class="interactive-demo-trajectory-canvas" id="interactiveDemoTrajectory" aria-hidden="true"></canvas>
+      <div class="interactive-demo-status" id="interactiveDemoStatus">Loading 3D…</div>
+    </div>
+
+    <div class="interactive-demo-thumbs" id="interactiveDemoThumbs" role="group" aria-label="Interactive demo selector">
+      <video src="./assets/interactive_demos/underwater.mp4"
+        data-scene="underwater"
+        data-glb="./assets/interactive_demos/underwater.glb?v=20260518-031627"
+        loop playsinline muted preload="auto"></video>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
      QUALITATIVE COMPARISON
 ============================================================ -->
 <section class="section vggto-comparison" id="qualitative-comparison">
@@ -236,7 +267,6 @@
         <div class="comparison-model-label">VGGT-Ω</div>
         <model-viewer id="comparisonOmegaViewer" loading="eager"
           touch-action="pan-y" environment-image="legacy"
-          src="./assets/comparison/snow_lift_omega.glb"
           zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 50%"
           max-camera-orbit="auto auto 350%" interaction-prompt="none" shadow-intensity="0" ar>
         </model-viewer>
@@ -246,7 +276,6 @@
         <div class="comparison-model-label">Depth Anything 3</div>
         <model-viewer id="comparisonDa3Viewer" loading="eager"
           touch-action="pan-y" environment-image="legacy"
-          src="./assets/comparison/snow_lift_da3.glb"
           zoom-sensitivity="0.2" camera-controls disable-tap min-camera-orbit="auto auto 50%"
           max-camera-orbit="auto auto 350%" interaction-prompt="none" shadow-intensity="0" ar>
         </model-viewer>
@@ -588,6 +617,7 @@
     theta: Math.PI,
     phi: 70 * Math.PI / 180,
     radiusScale: 1,
+    targetScale: { x: 0, y: 0, z: 0 },
   };
   const viewerMinRadiusScale = 0.5;
   const viewerMaxRadiusScale = 3.5;
@@ -602,11 +632,21 @@
           theta: 3.072979,
           phi: 1.461906,
           radiusScale: 1.168546,
+          targetScale: {
+            x: 0,
+            y: 0,
+            z: 0,
+          },
         },
         da3: {
-          theta: -0.202522,
-          phi: 1.255307,
-          radiusScale: 4.076302,
+          theta: -0.035967,
+          phi: 1.25679,
+          radiusScale: 3.801942,
+          targetScale: {
+            x: 0,
+            y: 0,
+            z: 0,
+          },
         },
       },
     },
@@ -617,14 +657,24 @@
       da3: './assets/comparison/bushes_da3.glb',
       cameras: {
         omega: {
-          theta: 3.141593,
-          phi: 1.194267,
-          radiusScale: 1.254116,
+          theta: 3.007581,
+          phi: 1.232132,
+          radiusScale: 0.927273,
+          targetScale: {
+            x: 0,
+            y: 0,
+            z: 0,
+          },
         },
         da3: {
-          theta: -0.885915,
-          phi: 0.914961,
-          radiusScale: 1.532466,
+          theta: -0.58849,
+          phi: 0.602616,
+          radiusScale: 1.285118,
+          targetScale: {
+            x: -0.006747,
+            y: 0.11738,
+            z: 0.019697,
+          },
         },
       },
     },
@@ -635,14 +685,24 @@
       da3: './assets/comparison/tower_da3.glb',
       cameras: {
         omega: {
-          theta: 3.024501,
-          phi: 0.901324,
-          radiusScale: 0.588252,
+          theta: 2.970059,
+          phi: 0.942417,
+          radiusScale: 0.43714,
+          targetScale: {
+            x: -0.085108,
+            y: 0.169837,
+            z: -0.345857,
+          },
         },
         da3: {
-          theta: 6.111136,
-          phi: 0.540833,
-          radiusScale: 1.010586,
+          theta: 6.097874,
+          phi: 0.011156,
+          radiusScale: 1.183951,
+          targetScale: {
+            x: 0.023111,
+            y: -0.015004,
+            z: -0.032495,
+          },
         },
       },
     },
@@ -687,21 +747,105 @@
       return (example.cameras && example.cameras[key]) || defaultComparisonCamera;
     }
 
+    function vectorOrZero(value) {
+      return value && Number.isFinite(value.x) && Number.isFinite(value.y) && Number.isFinite(value.z)
+        ? value
+        : { x: 0, y: 0, z: 0 };
+    }
+
+    function targetScaleFor(camera) {
+      const targetScale = camera && camera.targetScale;
+      return vectorOrZero(targetScale);
+    }
+
+    function cameraTargetFor(viewer, camera) {
+      const dimensions = viewer.getDimensions ? viewer.getDimensions() : null;
+      const center = vectorOrZero(viewer.getBoundingBoxCenter ? viewer.getBoundingBoxCenter() : null);
+      const maxDim = Math.max(dimensions?.x || 0, dimensions?.y || 0, dimensions?.z || 0) || 1;
+      const targetScale = targetScaleFor(camera);
+      return {
+        x: center.x + maxDim * targetScale.x,
+        y: center.y + maxDim * targetScale.y,
+        z: center.z + maxDim * targetScale.z,
+      };
+    }
+
+    function cameraReady(viewer) {
+      if (viewer.loaded !== true) return null;
+      const orbit = viewer.getCameraOrbit();
+      const dimensions = viewer.getDimensions ? viewer.getDimensions() : null;
+      if (!orbit || !Number.isFinite(orbit.radius) || orbit.radius <= 0) return null;
+      if (!dimensions || !Number.isFinite(dimensions.x) || !Number.isFinite(dimensions.y) || !Number.isFinite(dimensions.z)) return null;
+      return orbit;
+    }
+
     function setComparisonZoomLimits(viewer, baseRadius) {
       if (!viewer || !Number.isFinite(baseRadius) || baseRadius <= 0) return;
       viewer.setAttribute('min-camera-orbit', `auto auto ${baseRadius * viewerMinRadiusScale}m`);
       viewer.setAttribute('max-camera-orbit', `auto auto ${baseRadius * viewerMaxRadiusScale}m`);
     }
 
+    function angleDelta(a, b) {
+      return Math.atan2(Math.sin(a - b), Math.cos(a - b));
+    }
+
+    function targetDistance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+    }
+
     function applyCamera(key, camera) {
       const viewer = viewers[key];
       const autoOrbit = autoOrbits[key];
-      if (!viewer || !camera || !autoOrbit) return;
-      const baseRadius = autoOrbit.radius * camera.radiusScale;
+      if (!viewer || !camera || !autoOrbit) return false;
+      const radiusScale = Number.isFinite(camera.radiusScale) ? camera.radiusScale : defaultComparisonCamera.radiusScale;
+      const baseRadius = autoOrbit.radius * radiusScale;
+      const target = cameraTargetFor(viewer, camera);
+      const cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+      const cameraOrbit = `${camera.theta}rad ${camera.phi}rad ${baseRadius}m`;
       setComparisonZoomLimits(viewer, baseRadius);
-      viewer.cameraOrbit = `${camera.theta}rad ${camera.phi}rad ${baseRadius}m`;
+      viewer.setAttribute('camera-target', cameraTarget);
+      viewer.cameraTarget = cameraTarget;
+      viewer.setAttribute('camera-orbit', cameraOrbit);
+      viewer.cameraOrbit = cameraOrbit;
+      viewer.dataset.appliedCamera = JSON.stringify({ key, camera, cameraOrbit, cameraTarget, autoRadius: autoOrbit.radius });
       if (viewer.resetTurntableRotation) viewer.resetTurntableRotation(0);
       if (viewer.jumpCameraToGoal) viewer.jumpCameraToGoal();
+      return true;
+    }
+
+    function cameraMatches(key, camera) {
+      const viewer = viewers[key];
+      const autoOrbit = autoOrbits[key];
+      if (!viewer || !camera || !autoOrbit) return false;
+      const expectedRadius = autoOrbit.radius * camera.radiusScale;
+      const expectedTarget = cameraTargetFor(viewer, camera);
+      try {
+        const orbit = viewer.getCameraOrbit();
+        const target = vectorOrZero(viewer.getCameraTarget ? viewer.getCameraTarget() : null);
+        const radiusTol = Math.max(expectedRadius * 0.001, 0.0005);
+        const targetTol = Math.max(expectedRadius * 0.001, 0.0005);
+        return Math.abs(angleDelta(orbit.theta, camera.theta)) < 0.001 &&
+          Math.abs(orbit.phi - camera.phi) < 0.001 &&
+          Math.abs(orbit.radius - expectedRadius) < radiusTol &&
+          targetDistance(target, expectedTarget) < targetTol;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function settleCamera(key, camera, token) {
+      const startedAt = performance.now();
+      let frames = 0;
+      const tick = () => {
+        if (token !== loadToken) return;
+        frames += 1;
+        applyCamera(key, camera);
+        if (cameraMatches(key, camera)) return;
+        if (frames < 120 && performance.now() - startedAt < 2400) {
+          window.requestAnimationFrame(tick);
+        }
+      };
+      tick();
     }
 
     function setViewerSource(key, src) {
@@ -709,19 +853,37 @@
       if (!viewer) return;
       viewer.setAttribute('min-camera-orbit', `auto auto ${viewerMinRadiusScale * 100}%`);
       viewer.setAttribute('max-camera-orbit', `auto auto ${viewerMaxRadiusScale * 100}%`);
+      viewer.removeAttribute('camera-target');
       viewer.setAttribute('camera-orbit', `${defaultComparisonCamera.theta}rad ${defaultComparisonCamera.phi}rad auto`);
       viewer.removeAttribute('src');
       viewer.setAttribute('src', src);
     }
 
-    function markViewerInitialized(key) {
+    function markViewerInitialized(key, token) {
       const viewer = viewers[key];
       const example = examples[activeIndex];
-      if (!viewer || !example) return;
-      try {
-        autoOrbits[key] = viewer.getCameraOrbit();
-        applyCamera(key, cameraFor(example, key));
-      } catch (_) {}
+      if (!viewer || !example || token !== loadToken) return;
+      const camera = cameraFor(example, key);
+      let attempts = 0;
+      const applyWhenReady = () => {
+        if (token !== loadToken) return;
+        attempts += 1;
+        try {
+          const orbit = cameraReady(viewer);
+          if (!orbit) throw new Error('viewer not ready');
+          autoOrbits[key] = orbit;
+          settleCamera(key, camera, token);
+          Promise.resolve(viewer.updateComplete).then(() => {
+            if (token === loadToken) settleCamera(key, camera, token);
+          }).catch(() => {});
+          window.setTimeout(() => {
+            if (token === loadToken) settleCamera(key, camera, token);
+          }, 120);
+        } catch (_) {
+          if (attempts < 45) window.requestAnimationFrame(applyWhenReady);
+        }
+      };
+      applyWhenReady();
     }
 
     function setExample(index) {
@@ -785,7 +947,7 @@
       viewer.addEventListener('load', () => {
         const token = loadToken;
         window.requestAnimationFrame(() => {
-          if (token === loadToken) markViewerInitialized(key);
+          if (token === loadToken) markViewerInitialized(key, token);
         });
       });
     });
@@ -803,6 +965,7 @@
   }
 })();
 </script>
+<script type="module" src="./interactive-demos.js?v=camera-views-2"></script>
 <script type="module" src="./gallery.js?v=no-full-viewer-1"></script>
 </body>
 </html>
