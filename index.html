@@ -655,11 +655,6 @@
     const buttons = [];
     let activeIndex = 0;
     let loadToken = 0;
-    let syncEnabled = false;
-    let syncingCamera = false;
-    let pendingSyncSource = null;
-    let syncFrame = null;
-    let enableSyncFrame = null;
     const viewers = {
       omega: omegaViewer,
       da3: da3Viewer,
@@ -667,10 +662,6 @@
     const autoOrbits = {
       omega: null,
       da3: null,
-    };
-    const initialized = {
-      omega: false,
-      da3: false,
     };
 
     function prepareVideo(video) {
@@ -692,24 +683,6 @@
 
     function cameraFor(example, key) {
       return (example.cameras && example.cameras[key]) || defaultComparisonCamera;
-    }
-
-    function normalizeAngle(rad) {
-      return Math.atan2(Math.sin(rad), Math.cos(rad));
-    }
-
-    function clampPhi(phi) {
-      return Math.max(0.001, Math.min(Math.PI - 0.001, phi));
-    }
-
-    function clampRadius(radius, baseRadius) {
-      if (!Number.isFinite(radius) || !Number.isFinite(baseRadius) || baseRadius <= 0) {
-        return radius;
-      }
-      return Math.max(
-        baseRadius * viewerMinRadiusScale,
-        Math.min(baseRadius * viewerMaxRadiusScale, radius)
-      );
     }
 
     function setComparisonZoomLimits(viewer, baseRadius) {
@@ -746,81 +719,13 @@
       try {
         autoOrbits[key] = viewer.getCameraOrbit();
         applyCamera(key, cameraFor(example, key));
-        initialized[key] = true;
-        if (initialized.omega && initialized.da3) {
-          if (enableSyncFrame) window.cancelAnimationFrame(enableSyncFrame);
-          enableSyncFrame = window.requestAnimationFrame(() => {
-            enableSyncFrame = null;
-            syncEnabled = initialized.omega && initialized.da3;
-          });
-        }
       } catch (_) {}
-    }
-
-    function syncCameraFrom(sourceKey) {
-      if (!syncEnabled || syncingCamera) return;
-      const targetKey = sourceKey === 'omega' ? 'da3' : 'omega';
-      const sourceViewer = viewers[sourceKey];
-      const targetViewer = viewers[targetKey];
-      const sourceAutoOrbit = autoOrbits[sourceKey];
-      const targetAutoOrbit = autoOrbits[targetKey];
-      const example = examples[activeIndex];
-      if (!sourceViewer || !targetViewer || !sourceAutoOrbit || !targetAutoOrbit || !example) return;
-
-      let sourceOrbit;
-      try {
-        sourceOrbit = sourceViewer.getCameraOrbit();
-      } catch (_) {
-        return;
-      }
-
-      const sourceInit = cameraFor(example, sourceKey);
-      const targetInit = cameraFor(example, targetKey);
-      const deltaTheta = normalizeAngle(sourceOrbit.theta - sourceInit.theta);
-      const deltaPhi = sourceOrbit.phi - sourceInit.phi;
-      const sourceBaseRadius = sourceAutoOrbit.radius * sourceInit.radiusScale;
-      const targetBaseRadius = targetAutoOrbit.radius * targetInit.radiusScale;
-      const relativeZoom = sourceBaseRadius
-        ? sourceOrbit.radius / sourceBaseRadius
-        : 1;
-      const targetTheta = targetInit.theta + deltaTheta;
-      const targetPhi = clampPhi(targetInit.phi + deltaPhi);
-      const targetRadius = clampRadius(targetBaseRadius * relativeZoom, targetBaseRadius);
-
-      syncingCamera = true;
-      targetViewer.cameraOrbit = `${targetTheta}rad ${targetPhi}rad ${targetRadius}m`;
-      if (targetViewer.jumpCameraToGoal) targetViewer.jumpCameraToGoal();
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          syncingCamera = false;
-        });
-      });
-    }
-
-    function scheduleCameraSync(sourceKey) {
-      if (!syncEnabled || syncingCamera) return;
-      pendingSyncSource = sourceKey;
-      if (syncFrame) return;
-      syncFrame = window.requestAnimationFrame(() => {
-        const key = pendingSyncSource;
-        pendingSyncSource = null;
-        syncFrame = null;
-        syncCameraFrom(key);
-      });
     }
 
     function setExample(index) {
       activeIndex = (index + examples.length) % examples.length;
       const example = examples[activeIndex];
       loadToken += 1;
-      syncEnabled = false;
-      pendingSyncSource = null;
-      if (enableSyncFrame) {
-        window.cancelAnimationFrame(enableSyncFrame);
-        enableSyncFrame = null;
-      }
-      initialized.omega = false;
-      initialized.da3 = false;
       autoOrbits.omega = null;
       autoOrbits.da3 = null;
       setViewerSource('omega', example.omega);
@@ -880,9 +785,6 @@
         window.requestAnimationFrame(() => {
           if (token === loadToken) markViewerInitialized(key);
         });
-      });
-      viewer.addEventListener('camera-change', () => {
-        scheduleCameraSync(key);
       });
     });
 
