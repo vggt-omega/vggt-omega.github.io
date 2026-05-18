@@ -22,24 +22,24 @@
   pointer-events: none;
 }
 
-/* Tighten the gap left after removing the top teaser video. */
+/* Page section spacing. */
 .hero .hero-body {
-  padding-bottom: 1.25rem;
+  padding-bottom: 1.5rem;
 }
 .vggto-abstract {
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 .vggto-takeaways {
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 #gallery {
-  padding-top: 1.25rem;
+  padding-top: 1.5rem;
 }
 .vggto-comparison {
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
 .vggto-venue {
@@ -52,8 +52,8 @@
 
 /* ---- Demo teaser ---- */
 .vggto-demo-teaser {
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 .demo-teaser-container {
   container-type: inline-size;
@@ -265,7 +265,7 @@
 }
 
 /* ---- TL;DR ---- */
-.vggto-tldr { padding-top: 1rem; padding-bottom: 1rem; }
+.vggto-tldr { padding-top: 1.25rem; padding-bottom: 1.25rem; }
 .tldr-grid .tldr-num {
   font-family: "Google Sans", "Inter", sans-serif;
   font-size: 44px;
@@ -472,8 +472,8 @@ figure.image figcaption {
 
 /* ---- Citation ---- */
 .vggto-citation {
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 .vggto-citation pre {
   width: 100%;
