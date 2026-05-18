@@ -461,6 +461,38 @@ figure.image figcaption {
 }
 .viewer-status.error { color: #b8336a; }
 
+/* ---- Citation ---- */
+.vggto-citation {
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+.vggto-citation pre {
+  width: 100%;
+  margin: 18px 0 0;
+  padding: 18px 20px;
+  box-sizing: border-box;
+  border: 1px solid #e5e3df;
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: #30343a;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .035);
+}
+.vggto-citation code {
+  color: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---- Footer ---- */
+.vggto-footer {
+  margin-top: 1.5rem;
+  min-height: 52px;
+  border-top: 1px solid #e4e9ef;
+  background: #f7f9fb;
+}
+
 /* ---- Qualitative comparison: video selector | VGGT-Ω | DA3 ---- */
 .comparison-grid {
   display: grid;
@@ -732,6 +764,9 @@ figure.image figcaption {
 }
 @media (max-width: 720px) {
   .row-viewer { aspect-ratio: 4 / 3; }
+  .vggto-footer {
+    min-height: 44px;
+  }
   .takeaways-list {
     grid-template-columns: 1fr;
     gap: 10px;
