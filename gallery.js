@@ -5,8 +5,6 @@
    Switching uses the same video-thumbnail pattern as the demo teaser.
 ===================================================================== */
 
-import * as THREE from 'three';
-
 // Selected entries. Each name becomes its own selectable example.
 const NAMES = [
   "16539923_uhd_fps4",
@@ -63,6 +61,14 @@ function glbPathFull(name) { return GLB_FULL_DIR + (GLB_NAME_OVERRIDES[name] || 
 const MODEL_VIEWER_MIN_RADIUS_SCALE = 0.5;
 const MODEL_VIEWER_MAX_RADIUS_SCALE = 3.5;
 const MODEL_VIEWER_FOV_DEG = 45;
+let threeModulePromise = null;
+
+function loadThree() {
+  if (!threeModulePromise) {
+    threeModulePromise = typeof window.importShim === "function" ? window.importShim("three") : import("three");
+  }
+  return threeModulePromise;
+}
 
 const DEFAULT_THREE_CAMERA = {
   direction: { x: 0.232788, y: 0.200791, z: 0.951574 },
@@ -298,7 +304,7 @@ if (grid) {
     return json.extras || {};
   }
 
-  function buildCamsViz(extras) {
+  function buildCamsViz(extras, THREE) {
     const flat = extras?.cam_from_worlds || [];
     const N = Math.min(extras?.frame_count || 0, Math.floor(flat.length / 16));
     if (!flat.length || !N) return null;
@@ -395,12 +401,9 @@ if (grid) {
   }
 
   function createTrajectoryOverlay(canvas, modelViewer) {
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setClearColor(0x000000, 0);
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(MODEL_VIEWER_FOV_DEG, 1, 0.0001, 1000);
+    let renderer = null;
+    let scene = null;
+    let camera = null;
     const abortController = new AbortController();
     let trajectory = null;
     let disposed = false;
@@ -410,9 +413,20 @@ if (grid) {
     let loading = false;
     let loadedUrl = "";
 
+    function initRenderer(THREE) {
+      if (renderer) return;
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.setClearColor(0x000000, 0);
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(MODEL_VIEWER_FOV_DEG, 1, 0.0001, 1000);
+    }
+
     function tick() {
       if (disposed) return;
       frameId = requestAnimationFrame(tick);
+      if (!renderer || !scene || !camera) return;
       const rect = canvas.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
       const width = Math.floor(rect.width);
@@ -435,10 +449,13 @@ if (grid) {
       if (!url || disposed || loading || loadedUrl === url) return;
       loading = true;
       loadGlbExtras(url, abortController.signal)
-        .then((extras) => {
+        .then(async (extras) => {
           if (disposed) return;
+          const THREE = await loadThree();
+          if (disposed) return;
+          initRenderer(THREE);
           loadedUrl = url;
-          trajectory = buildCamsViz(extras);
+          trajectory = buildCamsViz(extras, THREE);
           if (trajectory) {
             scene.add(trajectory);
             startTicking();
@@ -461,11 +478,11 @@ if (grid) {
         if (frameId) cancelAnimationFrame(frameId);
         abortController.abort();
         if (trajectory) {
-          scene.remove(trajectory);
+          if (scene) scene.remove(trajectory);
           disposeObject3D(trajectory);
           trajectory = null;
         }
-        renderer.dispose();
+        if (renderer) renderer.dispose();
       },
     };
   }

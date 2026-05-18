@@ -1,5 +1,3 @@
-import * as THREE from "three";
-
 const MODEL_VIEWER_FOV_DEG = 45;
 const MODEL_VIEWER_MIN_RADIUS_SCALE = 0.5;
 const MODEL_VIEWER_MAX_RADIUS_SCALE = 3.5;
@@ -15,6 +13,14 @@ let cameraViews = {
   default: DEFAULT_CAMERA_VIEW,
   scenes: {},
 };
+let threeModulePromise = null;
+
+function loadThree() {
+  if (!threeModulePromise) {
+    threeModulePromise = typeof window.importShim === "function" ? window.importShim("three") : import("three");
+  }
+  return threeModulePromise;
+}
 
 function playVideo(video) {
   if (!video) return;
@@ -212,7 +218,7 @@ async function loadGlbExtras(url, signal) {
   return json.extras || {};
 }
 
-function buildCamsViz(extras) {
+function buildCamsViz(extras, THREE) {
   const flat = extras?.cam_from_worlds || [];
   const count = Math.min(extras?.frame_count || 0, Math.floor(flat.length / 16));
   if (!flat.length || !count) return null;
@@ -322,13 +328,9 @@ function syncOverlayCamera(modelViewer, camera, canvas) {
 }
 
 function createTrajectoryOverlay(canvas, modelViewer) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.setClearColor(0x000000, 0);
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(MODEL_VIEWER_FOV_DEG, 1, 0.0001, 1000);
+  let renderer = null;
+  let scene = null;
+  let camera = null;
   let abortController = null;
   let trajectory = null;
   let disposed = false;
@@ -339,21 +341,32 @@ function createTrajectoryOverlay(canvas, modelViewer) {
   let loading = false;
   let loadToken = 0;
 
+  function initRenderer(THREE) {
+    if (renderer) return;
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000, 0);
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(MODEL_VIEWER_FOV_DEG, 1, 0.0001, 1000);
+  }
+
   function clearTrajectory() {
     if (!trajectory) return;
-    scene.remove(trajectory);
+    if (scene) scene.remove(trajectory);
     disposeObject3D(trajectory);
     trajectory = null;
     if (frameId) {
       cancelAnimationFrame(frameId);
       frameId = 0;
     }
-    renderer.clear();
+    if (renderer) renderer.clear();
   }
 
   function tick() {
     if (disposed) return;
     frameId = requestAnimationFrame(tick);
+    if (!renderer || !scene || !camera) return;
     const rect = canvas.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
     const width = Math.floor(rect.width);
@@ -385,9 +398,12 @@ function createTrajectoryOverlay(canvas, modelViewer) {
     clearTrajectory();
 
     loadGlbExtras(url, abortController.signal)
-      .then((extras) => {
+      .then(async (extras) => {
         if (disposed || token !== loadToken) return;
-        trajectory = buildCamsViz(extras);
+        const THREE = await loadThree();
+        if (disposed || token !== loadToken) return;
+        initRenderer(THREE);
+        trajectory = buildCamsViz(extras, THREE);
         if (trajectory) {
           scene.add(trajectory);
           startTicking();
@@ -410,7 +426,7 @@ function createTrajectoryOverlay(canvas, modelViewer) {
       if (frameId) cancelAnimationFrame(frameId);
       if (abortController) abortController.abort();
       clearTrajectory();
-      renderer.dispose();
+      if (renderer) renderer.dispose();
     },
   };
 }
