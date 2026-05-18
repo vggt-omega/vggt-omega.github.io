@@ -554,23 +554,6 @@ if (grid) {
     status.textContent = "Loading 3D…";
     viewPanel.appendChild(status);
 
-    // Toolbar over the viewer (top-right): "Open full point cloud ↗" link.
-    // Clicking opens a dedicated standalone viewer page in a new tab so the
-    // heavy full-res GLB doesn't slow this row down.
-    const toolbar = document.createElement("div");
-    toolbar.className = "viewer-toolbar";
-    const openBtn = document.createElement("a");
-    openBtn.className = "vb-btn open-full";
-    openBtn.href = "./viewer.html?name=" + encodeURIComponent(name);
-    openBtn.target = "_blank";
-    openBtn.rel = "noopener";
-    openBtn.title = "Open the full (un-downsampled) point cloud in a new tab";
-    openBtn.innerHTML =
-      `<span class="vb-dot"></span>` +
-      `<span class="vb-label">Open Full 3D Viewer</span>`;
-    toolbar.appendChild(openBtn);
-    viewPanel.appendChild(toolbar);
-
     const overlay = createTrajectoryOverlay(trajectoryCanvas, modelViewer);
     activeOverlays.push(overlay);
 

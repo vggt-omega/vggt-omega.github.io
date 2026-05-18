@@ -446,6 +446,7 @@ figure.image figcaption {
   background: #f5f5f5;
   overflow: hidden;
   border-radius: 10px;
+  box-shadow: 0 6px 14px rgba(20,24,30,.12);
   cursor: grab;
 }
 .row-viewer:active { cursor: grabbing; }
@@ -637,39 +638,6 @@ figure.image figcaption {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* viewer toolbar (open full ↗) — match gallery's old vb-btn style */
-.viewer-toolbar {
-  position: absolute;
-  top: 8px; right: 8px;
-  display: flex; gap: 6px;
-  z-index: 5;
-}
-.vb-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  font-family: "Google Sans", "Noto Sans", sans-serif;
-  font-size: 11px;
-  background: rgba(20,20,22,.78);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: 6px;
-  cursor: pointer;
-  letter-spacing: .04em;
-  backdrop-filter: blur(6px);
-  transition: background .12s;
-  text-decoration: none;
-}
-.vb-btn:hover { background: rgba(40,40,44,.92); color: #fff; }
-.vb-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #5b8def;
-  box-shadow: 0 0 6px rgba(91,141,239,.6);
-}
-.vb-swap { color: rgba(255,255,255,.6); margin-left: 2px; font-size: 10.5px; }
 
 /* ---- Pager (gallery + interactive share) ---- */
 .pager {
