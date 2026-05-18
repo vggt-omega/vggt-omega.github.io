@@ -27,7 +27,7 @@ const NAMES = [
 // we re-encode a clip (browsers cache MP4 bodies aggressively and don't honor
 // HTML query-string cache-busters on the parent index.html alone).
 const VIDEO_VER = "clean2";
-const THUMB_VER = "left2";
+const THUMB_VER = "thumb-compressed-2";
 const CAMERA_VIEWS_VER = "views1";
 const PREVIEW   = "./assets/videos/preview/";
 const THUMBS    = "./assets/videos/thumbs/";
@@ -667,7 +667,7 @@ if (grid) {
 
       const thumb = document.createElement("video");
       prepareThumbVideo(thumb);
-      thumb.preload = "metadata";
+      thumb.preload = "auto";
       thumb.tabIndex = -1;
       thumb.setAttribute("aria-hidden", "true");
       thumb.src = THUMBS + name + ".mp4?" + THUMB_VER;

@@ -243,11 +243,11 @@
     </div>
 
     <div class="interactive-demo-thumbs" id="interactiveDemoThumbs" role="group" aria-label="Interactive demo selector">
-      <video src="./assets/interactive_demos/underwater.mp4"
+      <video src="./assets/interactive_demos/thumbs/underwater.mp4?v=thumb2"
         data-scene="underwater"
         data-glb="./assets/interactive_demos/underwater.glb?v=20260518-031627"
         loop playsinline muted preload="auto"></video>
-      <video src="./assets/interactive_demos/drone_tree.mp4"
+      <video src="./assets/interactive_demos/thumbs/drone_tree.mp4?v=thumb2"
         data-scene="drone_tree"
         data-glb="./assets/interactive_demos/drone_tree.glb?v=20260518-052320"
         loop playsinline muted preload="auto"></video>
@@ -447,7 +447,7 @@
       thumb.muted = true;
       thumb.defaultMuted = true;
       thumb.playsInline = true;
-      thumb.preload = 'none';
+      thumb.preload = 'auto';
       thumb.tabIndex = -1;
       thumb.setAttribute('aria-hidden', 'true');
       thumb.setAttribute('muted', '');
@@ -456,25 +456,27 @@
       if (demo.thumbPoster || demo.inputPoster) {
         thumb.poster = demo.thumbPoster || demo.inputPoster;
       }
+      thumb.src = demo.thumb || demo.input;
+      thumb.load();
+      if (!demo.inputPoster) {
+        thumb.addEventListener('loadedmetadata', () => {
+          try { thumb.currentTime = 0.1; } catch (_) {}
+        }, { once: true });
+      }
 
-      function loadThumb() {
-        if (thumb.src) return;
-        thumb.src = demo.thumb || demo.input;
-        thumb.load();
-        if (!demo.inputPoster) {
-          thumb.addEventListener('loadedmetadata', () => {
-            try { thumb.currentTime = 0.1; } catch (_) {}
-          }, { once: true });
+      function ensureThumbReady() {
+        if (thumb.readyState === 0) {
+          thumb.load();
         }
       }
 
       button.appendChild(thumb);
       button.addEventListener('mouseenter', () => {
-        loadThumb();
+        ensureThumbReady();
         playVideo(thumb);
       });
       button.addEventListener('focus', () => {
-        loadThumb();
+        ensureThumbReady();
         playVideo(thumb);
       });
       button.addEventListener('mouseleave', () => {
@@ -629,6 +631,7 @@
     {
       id: 'snow_lift',
       video: './assets/comparison/snow_lift.mp4',
+      thumb: './assets/comparison/thumbs/snow_lift.mp4?v=thumb1',
       omega: './assets/comparison/snow_lift_omega.glb',
       da3: './assets/comparison/snow_lift_da3.glb',
       cameras: {
@@ -657,6 +660,7 @@
     {
       id: 'bushes',
       video: './assets/comparison/bushes.mp4',
+      thumb: './assets/comparison/thumbs/bushes.mp4?v=thumb1',
       omega: './assets/comparison/bushes_omega.glb',
       da3: './assets/comparison/bushes_da3.glb',
       cameras: {
@@ -685,6 +689,7 @@
     {
       id: 'tower',
       video: './assets/comparison/tower.mp4',
+      thumb: './assets/comparison/thumbs/tower.mp4?v=thumb1',
       omega: './assets/comparison/tower_omega.glb',
       da3: './assets/comparison/tower_da3.glb',
       cameras: {
@@ -968,8 +973,8 @@
       button.setAttribute('aria-pressed', 'false');
 
       const video = document.createElement('video');
-      video.src = example.video;
-      video.preload = index === 0 ? 'auto' : 'metadata';
+      video.src = example.thumb || example.video;
+      video.preload = 'auto';
       video.tabIndex = -1;
       video.setAttribute('aria-hidden', 'true');
       if (example.poster) video.poster = example.poster;
@@ -1015,7 +1020,7 @@
   }
 })();
 </script>
-<script type="module" src="./interactive-demos.js?v=load-cleanup-2"></script>
-<script type="module" src="./gallery.js?v=load-cleanup-2"></script>
+<script type="module" src="./interactive-demos.js?v=load-cleanup-4"></script>
+<script type="module" src="./gallery.js?v=load-cleanup-4"></script>
 </body>
 </html>
