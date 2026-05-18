@@ -3,7 +3,7 @@ import * as THREE from "three";
 const MODEL_VIEWER_FOV_DEG = 45;
 const MODEL_VIEWER_MIN_RADIUS_SCALE = 0.5;
 const MODEL_VIEWER_MAX_RADIUS_SCALE = 3.5;
-const CAMERA_VIEWS_VER = "views2";
+const CAMERA_VIEWS_VER = "views3";
 const GLB_MAGIC = 0x46546c67;
 const GLB_JSON_CHUNK_TYPE = 0x4e4f534a;
 const DEFAULT_CAMERA_VIEW = {
