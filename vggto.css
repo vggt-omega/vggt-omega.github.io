@@ -766,11 +766,15 @@ figure.image figcaption {
   display: none;
 }
 .interactive-demo-thumb {
+  --interactive-demo-thumb-width: 213px;
+  --interactive-demo-thumb-height: 120px;
+  --interactive-demo-thumb-active-width: var(--interactive-demo-thumb-width);
+  --interactive-demo-thumb-active-height: var(--interactive-demo-thumb-height);
   position: relative;
   flex: 0 0 auto;
   display: block;
-  width: 213px;
-  height: 120px;
+  width: var(--interactive-demo-thumb-width);
+  height: var(--interactive-demo-thumb-height);
   aspect-ratio: 16 / 9;
   padding: 0;
   border: 1px solid rgba(24,29,35,.12);
@@ -783,14 +787,16 @@ figure.image figcaption {
     0 4px 9px rgba(20,24,30,.11);
   transform: translateZ(0) scale(1);
   transform-origin: center;
-  transition: border-color .18s, box-shadow .18s, transform .18s;
+  transition: border-color .18s, box-shadow .18s, transform .18s, width .18s, height .18s;
   appearance: none;
   -webkit-appearance: none;
   box-sizing: border-box;
   line-height: 0;
 }
 .interactive-demo-thumb-portrait {
-  width: 68px;
+  --interactive-demo-thumb-width: 68px;
+  --interactive-demo-thumb-active-width: 204px;
+  --interactive-demo-thumb-active-height: 360px;
   aspect-ratio: 9 / 16;
 }
 .interactive-demo-thumb::before {
@@ -841,6 +847,12 @@ figure.image figcaption {
     0 10px 22px rgba(20,24,30,.16);
   z-index: 3;
   transform: translateY(-2px) scale(1.25);
+}
+.interactive-demo-thumb.interactive-demo-thumb-portrait.active,
+.interactive-demo-thumb.interactive-demo-thumb-portrait.active:hover {
+  width: var(--interactive-demo-thumb-active-width);
+  height: var(--interactive-demo-thumb-active-height);
+  transform: translateY(-2px) scale(1);
 }
 .interactive-demo-thumb:hover::before,
 .interactive-demo-thumb.active::before {
@@ -939,15 +951,21 @@ figure.image figcaption {
     overflow-x: auto;
   }
   .interactive-demo-thumb {
-    width: 178px;
-    height: 100px;
+    --interactive-demo-thumb-width: 178px;
+    --interactive-demo-thumb-height: 100px;
   }
   .interactive-demo-thumb-portrait {
-    width: 56px;
+    --interactive-demo-thumb-width: 56px;
+    --interactive-demo-thumb-active-width: 168px;
+    --interactive-demo-thumb-active-height: 300px;
   }
   .interactive-demo-thumb:hover,
   .interactive-demo-thumb.active,
   .interactive-demo-thumb.active:hover {
+    transform: none;
+  }
+  .interactive-demo-thumb.interactive-demo-thumb-portrait.active,
+  .interactive-demo-thumb.interactive-demo-thumb-portrait.active:hover {
     transform: none;
   }
 }
