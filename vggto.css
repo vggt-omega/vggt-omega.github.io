@@ -29,7 +29,8 @@
 .hero .hero-body {
   padding-bottom: var(--vggto-section-padding-y);
 }
-.vggto-abstract {
+.vggto-abstract,
+.vggto-important-notice {
   padding-top: var(--vggto-section-padding-y);
   padding-bottom: var(--vggto-section-padding-y);
 }
